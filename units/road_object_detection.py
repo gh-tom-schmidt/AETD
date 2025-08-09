@@ -11,6 +11,8 @@ class RoadObjectDetector:
     def process(self, img):
         # dont use the original image
         self.img = img.copy()
+        # crop by 160 px form the top
+        self.img = img[160:, :, :]
 
         # preprocess the image
         self.img = self.prepro(self.img)
