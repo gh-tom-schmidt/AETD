@@ -1,4 +1,4 @@
-from units import Preprocessor
+from modules.preprocessor import Preprocessor
 from ultralytics import YOLO
 import cv2
 import numpy as np

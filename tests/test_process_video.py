@@ -1,6 +1,6 @@
 # process a video to show the systems output
 
-from units import Unit
+from modules import Unit
 from driver import VideoLoader, DebugView
 
 video_input_path = "data/tests/ETS2_60-FPS_2025-08-09_19-51-39_trimmed.mp4"
@@ -12,15 +12,11 @@ segmentation_model_path = "models/yolo-seg-m_full-road_best_epochs-300_size-460-
 
 
 vl = VideoLoader(video_input_path, video_output_path)
-unit = Unit()
+unit = Unit(detection_model_path, classification_model_path, segmentation_model_path)
 debug_view = DebugView()
 
-frames = vl.getBatch()
-while frames is not None:
-    for frame in frames:
-        unit.process(frame)
-        result = unit.getResult()
-        processed_frames = debug_view.draw(frame, result)
-
-    vl.saveBatch(processed_frames)
-    frames = vl.getBatch()
+for frame in vl:
+    unit.process(frame)
+    result = unit.getResult()
+    processed_frames = debug_view.draw(frame, result)
+    vl.save(processed_frames)

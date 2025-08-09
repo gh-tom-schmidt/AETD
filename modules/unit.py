@@ -1,4 +1,4 @@
-from units import NavigationDataExtractor, RoadObjectDetector, RoadSegmentor, SpeedDataExtractor, PathPlanner
+from modules import NavigationDataExtractor, RoadObjectDetector, RoadSegmentor, SpeedDataExtractor, PathPlanner
 
 class Unit():
     def __init__(self, detection_model_path, classification_model_path, segmentation_model_path):
