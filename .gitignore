@@ -1,5 +1,5 @@
 env/
 *.pt
-*.mp4
+data/tests/*
 __pycache__/
 .vscode/

@@ -4,28 +4,39 @@ import cv2
 from configs.globals import DETECTION_MODEL_DEVICES
 from configs.globals import CLASSIFICATION_MODEL_DEVICES
 
+
 class RoadObjectDetector:
     def __init__(self, detection_model_path, classification_model_path):
         self.prepro = Preprocessor()
         self.detection_model = YOLO(detection_model_path)
         self.road_objects = RoadObjects(classification_model_path)
-    
+
     def process(self, img):
         # dont use the original image
         self.img = img.copy()
         # crop by 160 px form the top
         self.img = img[160:, :, :]
 
+        # clean the previous objects
+        self.road_objects.clear()
+
         # preprocess the image
-        self.img = self.prepro(self.img)
+        self.img = self.prepro.process(self.img)
         self.img = cv2.cvtColor(self.img, cv2.COLOR_BGR2RGB)
 
         self.predictBoxes()
 
         return self.road_objects
-        
+
     def predictBoxes(self):
-        results = self.detection_model.predict(self.img, device=DETECTION_MODEL_DEVICES, batch=1)
+        results = self.detection_model.predict(
+            self.img,
+            device=DETECTION_MODEL_DEVICES,
+            batch=1,
+            verbose=False,
+            conf=0.5,
+            iou=0.45,
+        )
 
         for result in results:
             xyxy = result.boxes.xyxy  # [x1, y1, x2, y2]
@@ -34,22 +45,29 @@ class RoadObjectDetector:
             names = [result.names[cls.item()] for cls in class_ids]
 
         for coords, name, conf in zip(xyxy, names, confs):
-            self.road_objects.add(map(int, coords.tolist()), name, conf)
+            self.road_objects.add(self.img, list(map(int, coords.tolist())), name, conf)
 
 
-class RoadObjects():
+class RoadObjects:
     def __init__(self, classification_model_path):
         self.objects = []
         self.classification_model = YOLO(classification_model_path)
-    
-    def add(self, coords, cls_name, conf):
-        
+
+    def clear(self):
+        self.objects = []
+
+    def add(self, img, coords, cls_name, conf):
+
         # cls == 2 is "Vehicle"
-        if cls_name != "Vehicle": 
+        if cls_name != "Vehicle":
             # refine the cls of the sign or light
-            results = self.detection_model.predict(self.img, device=CLASSIFICATION_MODEL_DEVICES, batch=1)
+            x1, y1, x2, y2 = coords
+            cropped_img = img[y1:y2, x1:x2]
+            results = self.classification_model.predict(
+                cropped_img, device=CLASSIFICATION_MODEL_DEVICES, batch=1
+            )
             pred = results[0]
-            cls_name = pred.names[pred.probs.top1] 
+            cls_name = pred.names[pred.probs.top1]
             # get the average confidence from both predictions
             conf = (conf + pred.probs.top1conf.item()) / 2
 
