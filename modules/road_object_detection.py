@@ -1,6 +1,8 @@
 from modules.preprocessor import Preprocessor
 from ultralytics import YOLO
 import cv2
+from configs.globals import DETECTION_MODEL_DEVICES
+from configs.globals import CLASSIFICATION_MODEL_DEVICES
 
 class RoadObjectDetector:
     def __init__(self, detection_model_path, classification_model_path):
@@ -23,7 +25,7 @@ class RoadObjectDetector:
         return self.road_objects
         
     def predictBoxes(self):
-        results = self.detection_model.predict(self.img, device='cuda:0', batch=1)
+        results = self.detection_model.predict(self.img, device=DETECTION_MODEL_DEVICES, batch=1)
 
         for result in results:
             xyxy = result.boxes.xyxy  # [x1, y1, x2, y2]
@@ -45,7 +47,7 @@ class RoadObjects():
         # cls == 2 is "Vehicle"
         if cls_name != "Vehicle": 
             # refine the cls of the sign or light
-            results = self.detection_model.predict(self.img, device='cuda:0', batch=1)
+            results = self.detection_model.predict(self.img, device=CLASSIFICATION_MODEL_DEVICES, batch=1)
             pred = results[0]
             cls_name = pred.names[pred.probs.top1] 
             # get the average confidence from both predictions

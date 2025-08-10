@@ -2,6 +2,7 @@ from modules.preprocessor import Preprocessor
 from ultralytics import YOLO
 import cv2
 import numpy as np
+from configs.globals import SEGMENTATION_MODEL_DEVICES
 
 class RoadSegmentor:
     def __init__(self, segmentation_model_path):
@@ -24,7 +25,7 @@ class RoadSegmentor:
         return self.segments
 
     def segmenting(self):
-        results = self.seg_model_model.predict(self.img, device='cuda:0', batch=1)
+        results = self.seg_model_model.predict(self.img, device=SEGMENTATION_MODEL_DEVICES, batch=1)
         
         for result in results:
             if result.masks:
