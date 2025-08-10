@@ -78,6 +78,17 @@ class PathPlanner:
         # 6. sort the lanes by there offset values from left to right, so smallest to biggest x
         sorted_lanes = sorted(striped_lanes, key=lambda l: l.offset)
 
+        # only keep unique offsets
+        unique_lanes = []
+        seen_offsets = set()
+
+        for lane in sorted_lanes:
+            if lane.offset not in seen_offsets:
+                unique_lanes.append(lane)
+                seen_offsets.add(lane.offset)
+
+        sorted_lanes = unique_lanes
+
         # 7. from left to right: calculate a non-linear function that descripts the center of both lanes
         paths = []
         for i in range(len(sorted_lanes) - 1):
@@ -100,12 +111,13 @@ class PathPlanner:
                 for y in range(l.img_height // 2, l.img_height)
                 if 0 <= g(y) < l.img_width
             ]
-            pts = np.array(pts, dtype=np.int32)
-            pts = pts.reshape((-1, 1, 2))
-            g_mask = np.zeros((l.img_height, l.img_width), dtype=np.uint8)
-            cv2.fillPoly(g_mask, [pts], 255)
-            if self.is_lane_inside_driveable(g_mask, driveable_mask):
-                paths.append(g)
+            if len(pts) > 0:
+                pts = np.array(pts, dtype=np.int32)
+                pts = pts.reshape((-1, 1, 2))
+                g_mask = np.zeros((l.img_height, l.img_width), dtype=np.uint8)
+                cv2.fillPoly(g_mask, [pts], 255)
+                if self.is_lane_inside_driveable(g_mask, driveable_mask):
+                    paths.append(g)
 
         if len(sorted_lanes) == 0:
             paths = None

@@ -29,9 +29,20 @@ class RoadSegmentor:
 
         return self.segments
 
-    def segmenting(self, min_conf=0.6, min_area_lane=300, min_area_driveable=800):
+    def segmenting(
+        self,
+        min_conf=0.6,
+        min_area_lane=400,
+        min_length_lane=300,
+        min_area_driveable=1000,
+        min_length_driveable=1000,
+    ):
         results = self.seg_model_model.predict(
-            self.img, device=SEGMENTATION_MODEL_DEVICES, batch=1, verbose=False
+            self.img,
+            device=SEGMENTATION_MODEL_DEVICES,
+            batch=1,
+            verbose=False,
+            iou=0.45,
         )
 
         for result in results:
@@ -41,7 +52,7 @@ class RoadSegmentor:
                 confs = result.boxes.conf.tolist()
                 names = result.names
 
-                kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (3, 3))
+                kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (3, 3))
                 height, width = self.img.shape[:2]
 
                 for polygon, cls_id, conf in zip(polygons, class_ids, confs):
@@ -54,8 +65,13 @@ class RoadSegmentor:
                     pts = polygon.astype(np.int32).reshape((-1, 1, 2))
                     cv2.fillPoly(mask, [pts], 255)
 
-                    # Morphological opening to remove thin lines
-                    cleaned_mask = cv2.morphologyEx(mask, cv2.MORPH_OPEN, kernel)
+                    # First opening to remove noise
+                    opened_mask = cv2.morphologyEx(mask, cv2.MORPH_OPEN, kernel)
+
+                    # Then closing to close gaps inside the objects
+                    cleaned_mask = cv2.morphologyEx(
+                        opened_mask, cv2.MORPH_CLOSE, kernel
+                    )
 
                     # Find contours on cleaned mask
                     contours, _ = cv2.findContours(
@@ -65,13 +81,38 @@ class RoadSegmentor:
                     cls_name = names[cls_id]
 
                     for cnt in contours:
+
+                        x_coords = cnt[:, 0, 0]
+                        y_coords = cnt[:, 0, 1]
+                        horizontal_length = x_coords.max() - x_coords.min()
+                        vertical_length = y_coords.max() - y_coords.min()
+
                         area = cv2.contourArea(cnt)
-                        if (area > min_area_lane and cls_name != "Driveable") or (
-                            area > min_area_driveable and cls_name == "Driveable"
-                        ):
-                            self.segments.add(
-                                cnt.reshape((-1, 1, 2)), cls_name, conf, self.img.shape
-                            )
+                        length = cv2.arcLength(cnt, True)
+
+                        if cls_name != "Driveable":
+                            if (
+                                area > min_area_lane
+                                and length > min_length_lane
+                                and vertical_length > min_length_lane
+                            ):
+                                self.segments.add(
+                                    cnt.reshape((-1, 1, 2)),
+                                    cls_name,
+                                    conf,
+                                    self.img.shape,
+                                )
+                        else:
+                            if (
+                                area > min_area_driveable
+                                and length > min_length_driveable
+                            ):
+                                self.segments.add(
+                                    cnt.reshape((-1, 1, 2)),
+                                    cls_name,
+                                    conf,
+                                    self.img.shape,
+                                )
 
 
 class Segments:
