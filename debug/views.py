@@ -158,3 +158,8 @@ class DebugView:
                 cv2.polylines(
                     self.img, [pts_np], isClosed=False, color=(139, 0, 0), thickness=5
                 )
+
+
+class Image:
+    def __init__(self):
+        pass

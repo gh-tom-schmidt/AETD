@@ -1,5 +1,5 @@
 from modules import Unit
-from driver import SampleLoader, DebugView
+from debug import SampleLoader, DebugView
 
 img_dir = "data/tests/Samples/"
 

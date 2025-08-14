@@ -5,6 +5,7 @@ from modules import (
     SpeedDataExtractor,
     PathPlanner,
 )
+from concurrent.futures import ThreadPoolExecutor, as_completed
 
 
 class Unit:
@@ -20,12 +21,28 @@ class Unit:
     def process(self, img):
         self.img = img.copy()
 
-        self.direction = self.nde.process(img)
-        self.speed = self.sde.process(img)
-        self.objects = self.rod.process(img)
-        self.segments = self.rs.process(img)
+        results = {}
+        # run all processings in parallel
+        with ThreadPoolExecutor() as executor:
+            futures = {
+                executor.submit(self.nde.process, img): "direction",
+                executor.submit(self.sde.process, img): "speed",
+                executor.submit(self.rod.process, img): "objects",
+                executor.submit(self.rs.process, img): "segments",
+            }
 
-        self.paths = self.pp.getPaths(self.segments)
+            # run the path planer when the segments are ready, even the rest
+            # might be still processing
+            for future in as_completed(futures):
+                key = futures[future]
+                results[key] = future.result()
+                if key == "segments":
+                    self.segments = results["segments"]
+                    self.paths = self.pp.getPaths(self.segments)
+
+        self.direction = results["direction"]
+        self.speed = results["speed"]
+        self.objects = results["objects"]
 
     def getResult(self):
         return self.direction, self.speed, self.objects, self.segments, self.paths
