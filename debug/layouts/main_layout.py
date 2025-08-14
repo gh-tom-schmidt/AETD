@@ -64,17 +64,20 @@ class MainWindow(QMainWindow):
         splitter = QSplitter(Qt.Horizontal)
 
         # left widget
-        self.image_viewer = ImageViewer(file_path)
+        self.image_viewer = ImageViewer()
         splitter.addWidget(self.image_viewer)
 
         # right widget
-        self.tab_bar = ModuleTabBar()
+        self.tab_bar = ModuleTabBar(self)
         splitter.addWidget(self.tab_bar)
         self.main_layout.addWidget(splitter)
 
-        # connect threads
-        self.image_viewer.image_ready.connect(self.tab_bar.nav_tab.receive_image)
-        self.tab_bar.nav_tab.result_ready.connect(self.image_viewer.handle_result)
+        # connect tabs from the tabbar and the image viewer
+        for tab in self.tab_bar.tabs:
+            self.image_viewer.image_ready.connect(tab.receive_image)
+            tab.result_ready.connect(self.image_viewer.handle_result)
+
+        self.image_viewer.load(file_path)
 
         # Caution: the size of the spliter should be set when the
         # layout is built otherwise it will not work correctly

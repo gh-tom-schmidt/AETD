@@ -1,6 +1,15 @@
 from .image_viewer import ImageViewer
 from .tab_bar import ModuleTabBar
-from .tab import ModulTab
-from .tabs.tab_nav import NavTab
+from .module_tab import ModulTab
+from .tabs import NavTab, SpeedTab, RoadObjectTab, SegmentorTab, PathTab
 
-__all__ = ["ImageViewer", "ModuleTabBar", "ModulTab", "NavTab"]
+__all__ = [
+    "ImageViewer",
+    "ModuleTabBar",
+    "ModulTab",
+    "NavTab",
+    "SpeedTab",
+    "RoadObjectTab",
+    "SegmentorTab",
+    "PathTab",
+]

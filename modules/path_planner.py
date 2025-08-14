@@ -24,7 +24,7 @@ class PathPlanner:
         coeffs[-1] += 2 * x  # add width to the constant term
         return np.poly1d(coeffs)
 
-    def getPaths(self, segments):
+    def process(self, segments):
 
         driveable = []  # cls == 0
         lanes = []  # cls == 1 or cls == 2
@@ -123,4 +123,9 @@ class PathPlanner:
             paths = None
 
         # 9. return the driveable paths
-        return paths
+        return PathData(paths)
+
+
+class PathData:
+    def __init__(self, paths):
+        self.paths = paths

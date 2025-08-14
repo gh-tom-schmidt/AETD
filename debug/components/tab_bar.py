@@ -1,31 +1,48 @@
-from PySide6.QtWidgets import QWidget, QVBoxLayout, QTabWidget
-from .tabs import NavTab
+from PySide6.QtWidgets import QTabWidget, QWidget, QHBoxLayout, QPushButton
+from .tabs import NavTab, SpeedTab, RoadObjectTab, SegmentorTab, PathTab
 
 
 class ModuleTabBar(QWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
 
-        # Main layout for this widget
-        right_layout = QVBoxLayout(self)
+        # layout to hold both the tab bar and the button
+        layout = QHBoxLayout(self)
+        layout.setContentsMargins(0, 0, 0, 0)
 
-        # Create tab widget
-        tab_widget = QTabWidget()
+        self.tab_widget = QTabWidget()
+        layout.addWidget(self.tab_widget)
 
-        # First tab
-        tab1 = QWidget()
-        layout1 = QVBoxLayout(tab1)
-        self.nav_tab = NavTab()
-        layout1.addWidget(self.nav_tab)
+        # save all tabs
+        self.tabs = []
 
-        # Second tab
-        tab2 = QWidget()
-        layout2 = QVBoxLayout(tab2)
-        # layout2.addWidget( ... your widgets here ... )
+        # hook tabs
+        tab = NavTab()
+        self.tab_widget.addTab(tab, "Navigation Data Extractor")
+        self.tabs.append(tab)
 
-        # Add tabs
-        tab_widget.addTab(tab1, "Navigation Data Extracotr")
-        tab_widget.addTab(tab2, "Tab 2")
+        tab = SpeedTab()
+        self.tab_widget.addTab(tab, "Speed Data Extractor")
+        self.tabs.append(tab)
 
-        # Add tab widget to layout
-        right_layout.addWidget(tab_widget)
+        tab = RoadObjectTab()
+        self.tab_widget.addTab(tab, "Road Object Detector")
+        self.tabs.append(tab)
+
+        tab = SegmentorTab()
+        self.tab_widget.addTab(tab, "Road Segmentor")
+        self.tabs.append(tab)
+
+        # add self here to get already calculated segments from the image viewer
+        tab = PathTab(self)
+        self.tab_widget.addTab(tab, "Path Planner")
+        self.tabs.append(tab)
+
+        # "run all modules at once" button
+        run_button = QPushButton("Run All")
+        run_button.clicked.connect(self.run_all_processes)
+        layout.addWidget(run_button)
+
+    def run_all_processes(self):
+        for tab in self.tabs:
+            tab.process()

@@ -22,7 +22,7 @@ class NavigationDataExtractor:
         self.calculateOnLane()
         self.determinAdvice()
 
-        return self.advice
+        return NavData(self.advice)
 
     def crop(self):
         top = 28
@@ -85,3 +85,8 @@ class NavigationDataExtractor:
             self.advice = f"Stay on the track with weight: {self.weight} and centere value: {self.on_lane}"
         else:
             self.advice = None
+
+
+class NavData:
+    def __init__(self, advice):
+        self.advice = advice

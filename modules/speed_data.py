@@ -20,7 +20,7 @@ class SpeedDataExtractor:
         self.bianry()
         self.read_speed()
 
-        return self.result
+        return SpeedData(self.result)
 
     def crop(self):
         top = 5
@@ -48,3 +48,8 @@ class SpeedDataExtractor:
             self.result = int(self.result[0])
         else:
             self.result = None
+
+
+class SpeedData:
+    def __init__(self, speed):
+        self.speed = speed
