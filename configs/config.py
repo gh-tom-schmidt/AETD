@@ -1,19 +1,19 @@
-import configparser
+import importlib
+from pathlib import Path
 
 
 class Config:
-    def __init__(self, file_name="debug_default.conf"):
-        parser = configparser.ConfigParser()
-        parser.read(file_name)
+    data = {}
 
-        # flatten the config sections into uppercase globals
-        for section in parser.sections():
-            for key, value in parser[section].items():
-                # convert to int if possible
-                if value.isdigit():
-                    value = int(value)
-                # store in class-level dictionary
+    def __init__(self, file_name="debug_default.pyi"):
+        # Remove extension so Python can import it
+        module_name = Path(file_name).stem
+        config_module = importlib.import_module(module_name)
+
+        # Get all variables that do not start with "__"
+        for key, value in vars(config_module).items():
+            if not key.startswith("__"):
                 Config.data[key.upper()] = value
 
-        # inject into module globals so they're directly accessible
+        # Inject into globals
         globals().update(Config.data)

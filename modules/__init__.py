@@ -1,13 +1,20 @@
-from .navigation_data import NavigationDataExtractor, NavData
-from .speed_data import SpeedDataExtractor, SpeedData
-from .road_object_detection import RoadObjectDetector, RoadObjects
-from .road_segmentation import RoadSegmentor, Segment, Segments
-from .path_planner import PathPlanner, PathData
+from .direction import DirectionExtractor
+from .speed import SpeedExtractor
+from .road_objects import RoadObjectExtractor, Vehicle, Sign, TrafficLight
+from .road_segmentations import RoadSegmentor, Segment, Segments
+from .paths import PathPlanner, PathExtractor, Path
 from .preprocessor import Preprocessor
 from .unit import Unit
+from .data_containers import (
+    RoadSegmentsBox,
+    RoadObjectsBox,
+    SpeedBox,
+    DirectionBox,
+    PathsBox,
+)
 
 __all__ = [
-    "NavigationDataExtractor",
+    "DirectionExtractor",
     "SpeedDataExtractor",
     "NavData",
     "SpeedData",
@@ -20,4 +27,9 @@ __all__ = [
     "PathData",
     "Preprocessor",
     "Unit",
+    "RoadSegmentsBox",
+    "RoadObjectsBox",
+    "SpeedBox",
+    "DirectionBox",
+    "PathsBox",
 ]
