@@ -5,7 +5,7 @@
 
 ---
 
-<p align="center"> <a href="./LICENSE"><img src="https://img.shields.io/badge/License-GPLv3-blue.svg" alt="License"></a> <img src="https://img.shields.io/badge/Python-3.9%2B-brightgreen.svg" alt="Python"> <img src="https://img.shields.io/badge/Status-Alpha-orange.svg" alt="Status"> <img src="https://img.shields.io/badge/Platform-Euro%20Truck%20Simulator%202-lightgrey.svg" alt="Platform"> <img src="https://img.shields.io/github/last-commit/USERNAME/AETD" alt="Last Commit"> <img src="https://img.shields.io/github/issues/USERNAME/AETD" alt="Issues"> <img src="https://img.shields.io/github/stars/USERNAME/AETD?style=social" alt="Stars"> <img src="https://img.shields.io/github/forks/USERNAME/AETD?style=social" alt="Forks"> </p>
+<p align="center"> <a href="./LICENSE"><img src="https://img.shields.io/badge/License-GPLv3-blue.svg" alt="License"></a> <img src="https://img.shields.io/badge/Python-3.9%2B-brightgreen.svg" alt="Python"> <img src="https://img.shields.io/badge/Status-Alpha-orange.svg" alt="Status"> <img src="https://img.shields.io/badge/Platform-Euro%20Truck%20Simulator%202-lightgrey.svg" alt="Platform"> <img src="https://img.shields.io/github/last-commit/gh-tom-schmidt/AETD" alt="Last Commit"> <img src="https://img.shields.io/github/issues/gh-tom-schmidt/AETD" alt="Issues"> <img src="https://img.shields.io/github/stars/gh-tom-schmidt/AETD?style=social" alt="Stars"> <img src="https://img.shields.io/github/forks/gh-tom-schmidt/AETD?style=social" alt="Forks"> </p>
 
 <p align="center"> <img src="docs/images/HomeImageET.png" alt="AETD" width="600"/> </p>
 
