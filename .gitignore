@@ -1,5 +1,5 @@
 env/
 *.pt
-data/tests/*
+debug/data/tests/*
 __pycache__/
 .vscode/
