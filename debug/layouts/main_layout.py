@@ -59,7 +59,7 @@ class MainWindow(QMainWindow):
         file_path: str = QFileDialog.getOpenFileName(
             parent=self,
             caption="Select Image File",
-            dir="",
+            dir=globals.BASE_DIR,
             filter="Image Files (*.png *.jpg *.jpeg *.bmp *.gif);;All Files (*)",
         )[0]
 

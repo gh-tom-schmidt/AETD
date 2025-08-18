@@ -7,6 +7,8 @@ from typing import Any, cast
 
 import cv2
 import numpy as np
+from numpy.typing import NDArray
+from torch import Tensor
 from ultralytics import YOLO  # pyright: ignore[reportMissingTypeStubs]
 from ultralytics.engine.results import Probs, Results  # pyright: ignore[reportMissingTypeStubs]
 
@@ -76,8 +78,8 @@ class RoadObjectExtractor:
             # [x1, y1, x2, y2]
             if result.boxes is None:
                 continue
-            xyxy: np.ndarray[Any, Any] = cast(np.ndarray[Any, Any], result.boxes.xyxy)  # pyright: ignore[reportUnknownMemberType]
-            class_ids: np.ndarray[Any, Any] = cast(np.ndarray[Any, Any], result.boxes.cls).astype(dtype=int)  # pyright: ignore[reportUnknownMemberType]
+            xyxy: NDArray[np.uint8] = self.to_numpy_int(result.boxes.xyxy)  # pyright: ignore[reportUnknownArgumentType, reportUnknownMemberType]
+            class_ids: NDArray[np.uint8] = self.to_numpy_int(result.boxes.cls)  # pyright: ignore[reportUnknownArgumentType, reportUnknownMemberType]
 
             for coords, cls in zip(xyxy, class_ids):
                 # 0: Sign
@@ -133,3 +135,8 @@ class RoadObjectExtractor:
             return cast(Probs, results[0].probs).top1
         else:
             return None
+
+    def to_numpy_int(self, x: Tensor | np.ndarray[Any, Any]) -> np.ndarray[Any, Any]:
+        if isinstance(x, Tensor):
+            return x.cpu().numpy().astype(int)  # pyright: ignore[reportUnknownVariableType, reportUnknownMemberType]
+        return np.asarray(x, dtype=int)

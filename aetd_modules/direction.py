@@ -48,7 +48,6 @@ class DirectionExtractor:
 
         # always create a copy of the original image for safety
         img: Img = raw_img.copy()
-
         img = DirectionExtractor.crop(img=img, height=img.shape[0], width=img.shape[1])
 
         # take the width and height from the image after the cropping

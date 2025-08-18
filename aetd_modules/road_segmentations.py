@@ -7,6 +7,7 @@ from typing import Any, cast
 import cv2
 import numpy as np
 from numpy.typing import NDArray
+from torch import Tensor
 from ultralytics import YOLO  # pyright: ignore[reportMissingTypeStubs]
 from ultralytics.engine.results import Results  # pyright: ignore[reportMissingTypeStubs]
 
@@ -75,11 +76,11 @@ class RoadSegmentsExtractor:
         for result in results:
             if result.masks is None:
                 continue
-            polygons: list[np.ndarray[Any, Any]] = cast(list[np.ndarray[Any, Any]], result.masks.xy)  # pyright: ignore[reportUnknownMemberType]
+            polygons: list[NDArray[np.uint8]] = [self.to_numpy_int(r) for r in result.masks.xy]  # pyright: ignore[reportUnknownArgumentType, reportUnknownVariableType, reportUnknownMemberType]
 
             if result.boxes is None:
                 continue
-            class_ids: np.ndarray[Any, Any] = cast(np.ndarray[Any, Any], result.boxes.cls).astype(dtype=int)  # pyright: ignore[reportUnknownMemberType]
+            class_ids: NDArray[np.uint8] = self.to_numpy_int(result.boxes.cls)  # pyright: ignore[reportUnknownArgumentType, reportUnknownMemberType]
 
             for poly, cls in zip(polygons, class_ids):
                 # reshape the ouput to an opencv format
@@ -172,3 +173,8 @@ class RoadSegmentsExtractor:
         cnt: NDArray[np.uint8] = max(contours, key=cv2.contourArea)
 
         return cnt
+
+    def to_numpy_int(self, x: Tensor | np.ndarray[Any, Any]) -> np.ndarray[Any, Any]:
+        if isinstance(x, Tensor):
+            return x.cpu().numpy().astype(int)  # pyright: ignore[reportUnknownVariableType, reportUnknownMemberType]
+        return np.asarray(x, dtype=int)

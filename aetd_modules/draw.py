@@ -20,15 +20,17 @@ class Draw:
         img: Img = annotations.original_img.copy()
 
         if annotations.direction:
-            Draw.draw_direction(img=img, advice=annotations.direction)
+            img = Draw.draw_direction(img=img, advice=annotations.direction)
         if annotations.speed:
-            Draw.draw_speed(img=img, speed=annotations.speed)
+            img = Draw.draw_speed(img=img, speed=annotations.speed)
         if annotations.road_objects:
-            Draw.draw_road_objects(img=img, objects=annotations.road_objects)
+            img = Draw.draw_road_objects(img=img, objects=annotations.road_objects)
         if annotations.road_segments:
-            Draw.draw_road_segments(img=img, segments=annotations.road_segments)
+            img = Draw.draw_road_segments(img=img, segments=annotations.road_segments)
         if annotations.paths:
-            Draw.draw_paths(img=img, paths=annotations.paths)
+            img = Draw.draw_paths(img=img, paths=annotations.paths)
+
+        annotations.annotated_img = img
         return annotations
 
     @staticmethod

@@ -46,7 +46,7 @@ class SpeedBox(int):
         - __new__: Creates a new SpeedBox instance given the speed.
     """
 
-    def __new__(cls, speed: int) -> None:
+    def __new__(cls, speed: int) -> "SpeedBox":
         """
         Creates a new SpeedBox instance.
 
@@ -55,7 +55,7 @@ class SpeedBox(int):
         """
 
         if 0 <= speed <= 100:
-            super().__new__(cls, speed)
+            return super().__new__(cls, speed)
         else:
             raise ValueError(f"Invalid speed value: {speed}")
 
@@ -69,7 +69,7 @@ class DirectionBox(int):
         - __new__: Creates a new DirectionBox instance given the direction.
     """
 
-    def __new__(cls, direction: int) -> None:
+    def __new__(cls, direction: int) -> "DirectionBox":
         """
         Creates a new DirectionBox instance.
 
@@ -78,7 +78,7 @@ class DirectionBox(int):
         """
 
         if direction in [-1, 0, 1]:
-            super().__new__(cls, direction)
+            return super().__new__(cls, direction)
         else:
             raise ValueError(f"Invalid direction value: {direction}")
 
