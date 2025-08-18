@@ -1,19 +1,15 @@
 from concurrent.futures import Future, ThreadPoolExecutor, as_completed
 from typing import cast
 
-from modules import (
-    AnnotationsContainer,
-    DirectionBox,
-    DirectionExtractor,
-    PathPlanner,
-    RoadObjectExtractor,
-    RoadObjectsBox,
-    RoadSegmentsBox,
-    RoadSegmentsExtractor,
-    SpeedBox,
-    SpeedDataExtractor,
-)
-from tools import Box, Img
+from .containers import AnnotationsContainer, DirectionBox, PathsBox, RoadObjectsBox, RoadSegmentsBox, SpeedBox
+from .direction import DirectionExtractor
+from .paths import PathPlanner
+from .road_objects import RoadObjectExtractor
+from .road_segmentations import RoadSegmentsExtractor
+from .speed import SpeedDataExtractor
+from .types import Img
+
+Box = DirectionBox | SpeedBox | RoadObjectsBox | RoadSegmentsBox | PathsBox | None
 
 
 class Pipeline:

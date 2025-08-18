@@ -11,11 +11,11 @@ from ultralytics import YOLO  # pyright: ignore[reportMissingTypeStubs]
 from ultralytics.engine.results import Results  # pyright: ignore[reportMissingTypeStubs]
 
 from configs import globals
-from modules.preprocessor import Preprocessor
-from tools import Img, ImgT, LImg, LImgT
 
-from .data_containers import RoadSegmentsBox
-from .paths import Path, PathExtractor
+from .containers import Driveable, Impassable, Passable, Path, RoadSegmentsBox
+from .paths import PathExtractor
+from .preprocessor import Preprocessor
+from .types import Img, ImgT, LImg, LImgT
 
 
 class RoadSegmentsExtractor:
@@ -172,45 +172,3 @@ class RoadSegmentsExtractor:
         cnt: NDArray[np.uint8] = max(contours, key=cv2.contourArea)
 
         return cnt
-
-
-class Driveable:
-    """
-    This class holds the information for a driveable area.
-
-    Args:
-        pts (NDArray[np.uint8]): The points of the polygon.
-        path (Path): The path associated with the polygon.
-    """
-
-    def __init__(self, pts: NDArray[np.uint8], path: Path) -> None:
-        self.pts: NDArray[np.uint8] = pts
-        self.path: Path = path
-
-
-class Impassable:
-    """
-    This class holds the information for a impassable lane.
-
-    Args:
-        pts (NDArray[np.uint8]): The points of the polygon.
-        path (Path): The path associated with the polygon.
-    """
-
-    def __init__(self, pts: NDArray[np.uint8], path: Path) -> None:
-        self.pts: NDArray[np.uint8] = pts
-        self.path: Path = path
-
-
-class Passable:
-    """
-    This class holds the information for a passable lane.
-
-    Args:
-        pts (NDArray[np.uint8]): The points of the polygon.
-        path (Path): The path associated with the polygon.
-    """
-
-    def __init__(self, pts: NDArray[np.uint8], path: Path) -> None:
-        self.pts: NDArray[np.uint8] = pts
-        self.path: Path = path

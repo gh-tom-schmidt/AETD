@@ -21,7 +21,7 @@ class MainWindow(QMainWindow):
         The main window of the application.
         """
         super().__init__()
-        self.setWindowTitle(arg__1=globals.APP_TITLE)
+        self.setWindowTitle(globals.APP_TITLE)
 
         # create the main widget
         self.central_widget = QWidget()
@@ -29,17 +29,17 @@ class MainWindow(QMainWindow):
 
         # File selector
         self.open_button = QPushButton(text="Open Image")
-        self.open_button.setFixedSize(w=150, h=40)
+        self.open_button.setFixedSize(150, 40)
         self.open_button.clicked.connect(slot=self.selectAndBuild)
-        self.main_layout.addWidget(arg__1=self.open_button, alignment=Qt.AlignmentFlag.AlignCenter)
+        self.main_layout.addWidget(self.open_button, alignment=Qt.AlignmentFlag.AlignCenter)
 
         # add the layout to the central widget
-        self.central_widget.setLayout(arg__1=self.main_layout)
-        self.setCentralWidget(widget=self.central_widget)
+        self.central_widget.setLayout(self.main_layout)
+        self.setCentralWidget(self.central_widget)
 
         # apply global stylesheet
         file = QFile(name="styles/global.qss")
-        if file.open(flags=QFile.OpenModeFlag.ReadOnly | QFile.OpenModeFlag.Text):
+        if file.open(QFile.OpenModeFlag.ReadOnly | QFile.OpenModeFlag.Text):
             # convert QByteArray to bytes
             data = bytes(file.readAll())
             text: str = data.decode(encoding="utf-8")
@@ -64,21 +64,21 @@ class MainWindow(QMainWindow):
         )[0]
 
         # remove the open button from the layout
-        self.main_layout.removeWidget(w=self.open_button)
-        self.open_button.setParent(parent=None)
+        self.main_layout.removeWidget(self.open_button)
+        self.open_button.setParent(None)
         self.open_button.deleteLater()
 
         # ------------ Vertical Split screen ------------------
-        splitter = QSplitter(arg__1=Qt.Orientation.Horizontal)
+        splitter = QSplitter(Qt.Orientation.Horizontal)
 
         # left widget
         self.image_viewer = ImageViewer(img_path=file_path)
-        splitter.addWidget(widget=self.image_viewer)
+        splitter.addWidget(self.image_viewer)
 
         # right widget
         self.tab_bar = ModuleTabBar(parent=self)
-        splitter.addWidget(widget=self.tab_bar)
-        self.main_layout.addWidget(arg__1=splitter)
+        splitter.addWidget(self.tab_bar)
+        self.main_layout.addWidget(splitter)
 
         # connect tabs from the tabbar and the image viewer
         for tab in self.tab_bar.tabs:
@@ -89,4 +89,4 @@ class MainWindow(QMainWindow):
 
         # Caution: the size of the spliter should be set when the
         # layout is built otherwise it will not work correctly
-        splitter.setSizes(list=[self.width() * 2 // 3, self.width() // 3])
+        splitter.setSizes([self.width() * 2 // 3, self.width() // 3])

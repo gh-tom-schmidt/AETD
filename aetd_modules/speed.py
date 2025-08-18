@@ -9,9 +9,9 @@ import cv2
 import easyocr  # pyright: ignore[reportMissingTypeStubs]
 
 from configs import globals
-from tools import Img, ImgT
 
-from .data_containers import SpeedBox
+from .containers import SpeedBox
+from .types import Img, ImgT
 
 
 class SpeedDataExtractor:

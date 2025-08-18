@@ -1,8 +1,32 @@
 from PySide6.QtCore import Signal, Slot  # pyright: ignore[reportUnknownVariableType]
 from PySide6.QtWidgets import QHBoxLayout, QPushButton, QVBoxLayout, QWidget
 
-from modules import AnnotationsContainer, DirectionBox, PathPlanner, RoadObjectsBox, RoadSegmentsBox, SpeedBox
-from tools import Box, Extractors, Img
+from aetd_modules import (
+    AnnotationsContainer,
+    DirectionBox,
+    DirectionExtractor,
+    Img,
+    PathPlanner,
+    PathsBox,
+    Pipeline,
+    RoadObjectExtractor,
+    RoadObjectsBox,
+    RoadSegmentsBox,
+    RoadSegmentsExtractor,
+    SpeedBox,
+    SpeedDataExtractor,
+)
+
+Box = DirectionBox | SpeedBox | RoadObjectsBox | RoadSegmentsBox | PathsBox | None
+Extractors = (
+    DirectionExtractor
+    | SpeedDataExtractor
+    | RoadObjectExtractor
+    | RoadSegmentsExtractor
+    | PathPlanner
+    | Pipeline
+    | None
+)
 
 
 class ModulTab(QWidget):
@@ -10,25 +34,25 @@ class ModulTab(QWidget):
     result_ready = Signal(AnnotationsContainer)
 
     def __init__(self, parent: QWidget | None = None) -> None:
-        super().__init__(parent=parent)
+        super().__init__(parent)
         self.img: Img | None = None
         self.modul: Extractors | None = None
 
         # ---------------- LAYOUT ------------------------
-        main_layout = QVBoxLayout(parent=self)
+        main_layout = QVBoxLayout(self)
 
         # top row
         top_layout = QHBoxLayout()
         self.run_button = QPushButton(text="Run")
         self.run_button.clicked.connect(slot=self.process)
-        top_layout.addWidget(arg__1=self.run_button)
+        top_layout.addWidget(self.run_button)
         # pushes everything else to the right
         top_layout.addStretch()
 
-        main_layout.addLayout(layout=top_layout)
-        self.setLayout(arg__1=main_layout)
+        main_layout.addLayout(top_layout)
+        self.setLayout(main_layout)
 
-    @Slot(t1=AnnotationsContainer)
+    @Slot(AnnotationsContainer)
     def receive_annotation_container(self, annotations_container: AnnotationsContainer) -> None:
         self.annotations_container: AnnotationsContainer = annotations_container
 

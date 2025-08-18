@@ -3,10 +3,9 @@ from numpy import uint8
 from numpy.typing import NDArray
 
 from configs import globals
-from modules import Driveable, Impassable, Passable, Path, Sign, TrafficLight, Vehicle
-from tools import Img
 
-from .data_containers import AnnotationsContainer
+from .containers import AnnotationsContainer, Driveable, Impassable, Passable, Path, Sign, TrafficLight, Vehicle
+from .types import Img
 
 
 class Draw:

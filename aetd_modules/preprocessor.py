@@ -6,7 +6,8 @@ import cv2
 import numpy as np
 
 from configs import globals
-from tools import Float, Img, ImgT
+
+from .types import Float, Img, ImgT
 
 
 class Preprocessor:

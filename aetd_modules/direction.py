@@ -8,9 +8,9 @@ import numpy as np
 from numpy import intp
 
 from configs import globals
-from tools import Img, ImgT, LImg, LImgT
 
-from .data_containers import DirectionBox
+from .containers import DirectionBox
+from .types import Img, ImgT, LImg, LImgT
 
 
 class DirectionExtractor:

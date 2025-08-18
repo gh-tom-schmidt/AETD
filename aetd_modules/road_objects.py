@@ -11,10 +11,10 @@ from ultralytics import YOLO  # pyright: ignore[reportMissingTypeStubs]
 from ultralytics.engine.results import Probs, Results  # pyright: ignore[reportMissingTypeStubs]
 
 from configs import globals
-from modules.preprocessor import Preprocessor
-from tools import Img, ImgT
 
-from .data_containers import RoadObjectsBox
+from .containers import RoadObjectsBox, Sign, TrafficLight, Vehicle
+from .preprocessor import Preprocessor
+from .types import Img, ImgT
 
 
 class RoadObjectExtractor:
@@ -97,7 +97,7 @@ class RoadObjectExtractor:
                     if refined_cls is not None:
                         cls: int = refined_cls
 
-                    self.road_objects_box.add(road_object=Sign(coords=coords, cls=cls))
+                    self.road_objects_box.add(road_object=TrafficLight(coords=coords, cls=cls))
 
                 elif cls == 2:
                     self.road_objects_box.add(road_object=Vehicle(coords=coords, cls=cls))
@@ -133,69 +133,3 @@ class RoadObjectExtractor:
             return cast(Probs, results[0].probs).top1
         else:
             return None
-
-
-class Vehicle:
-    """
-    This class holds the information for detected vehicles.
-
-    Args:
-        coords (tuple[int, int, int, int]): The coordinates of the vehicle.
-        cls (int): The class ID of the vehicle.
-    """
-
-    def __init__(self, coords: tuple[int, int, int, int], cls: int) -> None:
-        """
-        This class holds the information for detected vehicles.
-
-        Args:
-            coords (tuple[int, int, int, int]): The coordinates of the vehicle.
-            cls (int): The class ID of the vehicle.
-        """
-
-        self.coords: tuple[int, int, int, int] = coords
-        self.cls: int = cls
-
-
-class Sign:
-    """
-    This class holds the information for detected signs.
-
-    Args:
-        coords (tuple[int, int, int, int]): The coordinates of the sign.
-        cls (int): The class ID of the sign.
-    """
-
-    def __init__(self, coords: tuple[int, int, int, int], cls: int) -> None:
-        """
-        This class holds the information for detected signs.
-
-        Args:
-            coords (tuple[int, int, int, int]): The coordinates of the sign.
-            cls (int): The class ID of the sign.
-        """
-
-        self.coords: tuple[int, int, int, int] = coords
-        self.cls: int = cls
-
-
-class TrafficLight:
-    """
-    This class holds the information for detected traffic lights.
-
-    Args:
-        coords (tuple[int, int, int, int]): The coordinates of the traffic light.
-        cls (int): The class ID of the traffic light.
-    """
-
-    def __init__(self, coords: tuple[int, int, int, int], cls: int) -> None:
-        """
-        This class holds the information for detected traffic lights.
-
-        Args:
-            coords (tuple[int, int, int, int]): The coordinates of the traffic light.
-            cls (int): The class ID of the traffic light.
-        """
-
-        self.coords: tuple[int, int, int, int] = coords
-        self.cls: int = cls

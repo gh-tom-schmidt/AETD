@@ -8,8 +8,7 @@ import math
 import numpy as np
 from numpy.typing import NDArray
 
-from .data_containers import PathsBox, RoadSegmentsBox
-from .road_segmentations import Impassable, Passable
+from .containers import Impassable, Passable, Path, PathsBox, RoadSegmentsBox
 
 
 class PathPlanner:
@@ -150,24 +149,6 @@ class PathPlanner:
         coeffs = -f.coeffs.copy()
         coeffs[-1] += 2 * x
         return np.poly1d(c_or_r=coeffs)
-
-
-class Path:
-    """
-    This class holds a polynomial function and its approximated points with bounds.
-    """
-
-    def __init__(
-        self,
-        f: np.poly1d,
-        approx_pts: NDArray[np.uint8],
-        scope_definition: tuple[np.uint8, np.uint8],
-        value_range: tuple[np.uint8, np.uint8],
-    ) -> None:
-        self.f: np.poly1d = f
-        self.approx_pts: NDArray[np.uint8] = approx_pts
-        self.scope_definition: tuple[np.uint8, np.uint8] = scope_definition
-        self.value_range: tuple[np.uint8, np.uint8] = value_range
 
 
 class PathExtractor:

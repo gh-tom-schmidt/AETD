@@ -4,20 +4,19 @@ from PySide6.QtCore import Qt, Signal, Slot  # pyright: ignore[reportUnknownVari
 from PySide6.QtGui import QImage, QPixmap, QResizeEvent
 from PySide6.QtWidgets import QLabel, QSizePolicy, QWidget
 
-from modules import AnnotationsContainer, Draw
-from tools import Img, ImgT
+from aetd_modules import AnnotationsContainer, Draw, Img, ImgT
 
 
 class ImageViewer(QLabel):
     # emit the image to all modules (tabs)
-    image_ready = Signal(Img)
+    image_ready = Signal(AnnotationsContainer)
 
     def __init__(self, img_path: str, parent: QWidget | None = None) -> None:
-        super().__init__(parent=parent)
-        self.setAlignment(arg__1=Qt.AlignmentFlag.AlignCenter)
+        super().__init__(parent)
+        self.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.img_path = None
 
-        self.setSizePolicy(horizontal=QSizePolicy.Policy.Ignored, vertical=QSizePolicy.Policy.Ignored)
+        self.setSizePolicy(QSizePolicy.Policy.Ignored, QSizePolicy.Policy.Ignored)
 
         # load the given image
         img: cv2.Mat | NumPyArrayNumeric | None = cv2.imread(filename=img_path, flags=cv2.IMREAD_COLOR)
@@ -40,26 +39,26 @@ class ImageViewer(QLabel):
         bytes_per_line: int = ch * w
 
         q_img = QImage(
-            data=bytes(rgb_image.data),  # convert memoryview to bytes
-            width=w,
-            height=h,
-            bytes_per_line=bytes_per_line,
-            format=QImage.Format.Format_RGB888,
-        )  # pyright: ignore[reportCallIssue]
+            rgb_image.tobytes(),
+            w,
+            h,
+            bytes_per_line,
+            QImage.Format.Format_RGB888,
+        )
 
         self.setPixmap(
-            arg__1=QPixmap.fromImage(image=q_img).scaled(
-                s=self.size(),
-                aspectMode=Qt.AspectRatioMode.KeepAspectRatio,
-                mode=Qt.TransformationMode.SmoothTransformation,
+            QPixmap.fromImage(q_img).scaled(
+                self.size(),
+                Qt.AspectRatioMode.KeepAspectRatio,
+                Qt.TransformationMode.SmoothTransformation,
             )
         )
 
     def resizeEvent(self, event: QResizeEvent) -> None:
         self.redraw()
-        super().resizeEvent(event=event)
+        super().resizeEvent(event)
 
-    @Slot(t1=AnnotationsContainer)
+    @Slot(AnnotationsContainer)
     def update_container(self, annotations_container: AnnotationsContainer) -> None:
         self.annotations_container = annotations_container
         self.redraw()
