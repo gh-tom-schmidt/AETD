@@ -2,31 +2,37 @@
 # This file holds the data containers storing various values from the image processing pipeline
 #
 
-from exceptions import DirectionOutOfBounds, SpeedOutOfBounds
-from typing import List
+from modules import Driveable, Impassable, Passable, Path, Sign, TrafficLight, Vehicle
+from tools import DirectionOutOfBounds, Img, SpeedOutOfBounds
 
 
-class DataContainer:
-    """
-    The DataContainer class holds various data attributes related to the image processing pipeline.
-
-    Methods:
-        - __init__: Initializes the data container with default value: None.
-    """
-
-    def __init__(self) -> None:
+class AnnotationsContainer:
+    def __init__(self, img: Img) -> None:
         """
-        Initializes the data container with default value: None.
+        The AnnotationsContainer class holds various data attributes related to the image processing pipeline.
+
+        Args:
+            img (Img): The original image.
+
+        Attributes:
+            original_img (Img | None): The original image.
+            annotated_img (Img | None): The annotated image.
+            speed (SpeedBox | None): The speed value.
+            direction (DirectionBox | None): The direction value.
+            road_objects (RoadObjectsBox | None): The road objects.
+            road_segments (RoadSegmentsBox | None): The road segments.
+            paths (PathsBox | None): The paths.
         """
 
-        self.original_img = None
-        self.annotated_img = None
+        self.original_img: Img = img
+        # on initialization the original and annotated images are the same
+        self.annotated_img: Img = img.copy()
 
-        self.speed = None
-        self.direction = None
-        self.road_objects = None
-        self.road_segments = None
-        self.paths = None
+        self.speed: SpeedBox | None = None
+        self.direction: DirectionBox | None = None
+        self.road_objects: RoadObjectsBox | None = None
+        self.road_segments: RoadSegmentsBox | None = None
+        self.paths: PathsBox | None = None
 
 
 class SpeedBox(int):
@@ -38,7 +44,7 @@ class SpeedBox(int):
         - __new__: Creates a new SpeedBox instance given the speed.
     """
 
-    def __new__(cls, speed: int | None) -> None:
+    def __new__(cls, speed: int) -> None:
         """
         Creates a new SpeedBox instance.
 
@@ -46,8 +52,8 @@ class SpeedBox(int):
             speed (int | None): The speed value to be wrapped.
         """
 
-        if 0 <= speed <= 100 or speed is None:
-            return super().__new__(cls, speed)
+        if 0 <= speed <= 100:
+            super().__new__(cls, speed)
         else:
             raise SpeedOutOfBounds(speed)
 
@@ -61,7 +67,7 @@ class DirectionBox(int):
         - __new__: Creates a new DirectionBox instance given the direction.
     """
 
-    def __new__(cls, direction: int | None) -> None:
+    def __new__(cls, direction: int) -> None:
         """
         Creates a new DirectionBox instance.
 
@@ -69,13 +75,13 @@ class DirectionBox(int):
             direction (int | None): The direction value to be wrapped.
         """
 
-        if direction in [-1, 0, 1] or direction is None:
-            return super().__new__(cls, direction)
+        if direction in [-1, 0, 1]:
+            super().__new__(cls, direction)
         else:
-            raise DirectionOutOfBounds(direction)
+            raise DirectionOutOfBounds(direction=direction)
 
 
-class RoadObjectsBox(List[RoadObject]):
+class RoadObjectsBox(list[Vehicle | Sign | TrafficLight]):
     """
     This class holds a list of road objects.
 
@@ -83,18 +89,18 @@ class RoadObjectsBox(List[RoadObject]):
         - add: Adds a road object to the list.
     """
 
-    def add(self, road_object: RoadObject) -> None:
+    def add(self, road_object: Vehicle | Sign | TrafficLight) -> None:
         """
         Add a road object to the list.
 
         Args:
-            road_object (RoadObject): The road object to be added.
+            road_object (Vehicle | Sign | TrafficLight): The road object to be added.
         """
 
         self.append(road_object)
 
 
-class RoadSegmentsBox(List[RoadSegmetns]):
+class RoadSegmentsBox(list[Driveable | Passable | Impassable]):
     """
     This class holds a list of road segments.
 
@@ -102,18 +108,18 @@ class RoadSegmentsBox(List[RoadSegmetns]):
         - add: Adds a road segment to the list.
     """
 
-    def add(self, road_segment: RoadSegment) -> None:
+    def add(self, road_segment: Driveable | Passable | Impassable) -> None:
         """
         Add a road segment to the list.
 
         Args:
-            road_segment (RoadSegment): The road segment to be added.
+            road_segment (Driveable | Passable | Impassable): The road segment to be added.
         """
 
         self.append(road_segment)
 
 
-class PathsBox(List[Path]):
+class PathsBox(list[Path]):
     """
     This class holds a list of paths.
 

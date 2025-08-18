@@ -3,49 +3,48 @@
 # The PathPlanner class is responsible for planning paths given segmented lanes.
 #
 
-import numpy as np
 import math
+
+import numpy as np
+from numpy.typing import NDArray
 
 from .data_containers import PathsBox, RoadSegmentsBox
 from .road_segmentations import Impassable, Passable
 
 
 class PathPlanner:
-    """
-    The PathPlanner class is responsible for planning paths given segmented lanes.
-
-    Methods:
-        - process: The processing pipeline for planning paths.
-        - dst: Compute the overall distance of the lane to the center of the image.
-        - get_distances: Calculate the distances of all impassable lanes to the center of the image.
-        - strip_unreachable: Strip unreachable lanes if there are not between the closest left and right impassable lanes.
-        - calculate_paths: Calculate paths between lanes and add them to the path box.
-        - mirror_around_x: Mirror a polynomial function around a vertical line at x.
-
-    """
-
     def __init__(self) -> None:
         """
-        Initialize the PathPlanner.
+        The PathPlanner class is responsible for planning paths given segmented lanes.
+
+        Methods:
+            - process: The processing pipeline for planning paths.
+            - dst: Compute the overall distance of the lane to the center of the image.
+            - get_distances: Calculate the distances of all impassable lanes to the center of the image.
+            - strip_unreachable: Strip unreachable lanes if there are not between the closest left and right impassable lanes.
+            - calculate_paths: Calculate paths between lanes and add them to the path box.
+            - mirror_around_x: Mirror a polynomial function around a vertical line at x.
+
         """
+        pass
 
-        self.path_box = None
-        self.lanes = None
-
-    def process(self, road_segment_box: RoadSegmentsBox) -> PathsBox:
+    def process(self, road_segment_box: RoadSegmentsBox, width: int, height: int) -> PathsBox | None:
         """
         The processing pipeline for planning paths.
         """
 
-        # create a new PathBox
-        self.path_box = PathsBox()
+        self.img_width: int = width
+        self.img_height: int = height
 
-        self.lanes = []
+        # create a new PathBox
+        self.path_box: PathsBox = PathsBox()
+
+        self.lanes: list[Impassable | Passable] = []
 
         # extract only the lanes
         for segment in road_segment_box:
             if isinstance(segment, Impassable) or isinstance(segment, Passable):
-                self.lanes.append[segment]
+                self.lanes.append(segment)
 
         # check if there is at least one lane
         # otherwise return None for now
@@ -54,9 +53,9 @@ class PathPlanner:
             return None
 
         # strip unreachable lanes
-        self.strip_unreachable(self.get_distances())
+        self.strip_unreachable(distances=self.get_distances())
         # sorte the lanes by there distance to the center
-        self.lanes = sorted(self.lanes, key=lambda l: self.dst(l))
+        self.lanes = sorted(self.lanes, key=lambda lane: self.dst(lane=lane))
 
         return self.path_box
 
@@ -71,9 +70,9 @@ class PathPlanner:
             float: The distance of the lane to the center of the image.
         """
 
-        x = lane.path.approx_pts[:, 0]
+        x: NDArray[np.uint8] = lane.path.approx_pts[:, 0]
         # compute mean absolute distance to center
-        return np.mean(x - self.img_width // 2)
+        return float(np.mean(x - self.img_width // 2))
 
     def get_distances(self) -> list[float]:
         """
@@ -83,12 +82,12 @@ class PathPlanner:
             list[float]: The distances of all lanes to the center of the image.
         """
 
-        distances = []
+        distances: list[float] = []
         # for all the impassable lanes
         for lane in self.lanes:
             if isinstance(lane, Impassable):
                 # compute mean absolute distance to center for each lane
-                distances.append(self.dst(lane))
+                distances.append(self.dst(lane=lane))
 
         return distances
 
@@ -104,20 +103,21 @@ class PathPlanner:
             None
         """
 
-        left_impassable_lane = min([dst for dst in distances if dst <= 0])
-        right_impassable_lane = max([dst for dst in distances if dst > 0])
-
-        # if there is no left or right impassable lane
-        if left_impassable_lane is None:
+        try:
+            left_impassable_lane: float | None = min([dst for dst in distances if dst <= 0])
+        except ValueError:
+            # if there is no left or right impassable lane
             left_impassable_lane = -math.inf
-        if right_impassable_lane is None:
+
+        try:
+            right_impassable_lane: float | None = max([dst for dst in distances if dst > 0])
+        except ValueError:
+            # if there is no left or right impassable lane
             right_impassable_lane = math.inf
 
         # filter the lanes
         self.lanes = [
-            l
-            for l in self.lanes
-            if left_impassable_lane <= self.dst(l) <= right_impassable_lane
+            lane for lane in self.lanes if left_impassable_lane <= self.dst(lane=lane) <= right_impassable_lane
         ]
 
     def calculate_paths(self) -> None:
@@ -127,9 +127,13 @@ class PathPlanner:
 
         for i in range(len(self.lanes) - 1):
             # calculate a center function between to lanes
-            f = (self.lanes[i].path.f + self.lanes[i + 1].path.f) / 2
+            f: np.poly1d = (self.lanes[i].path.f + self.lanes[i + 1].path.f) / 2
             # create a new path and add it to the path box
-            self.path_box.add(PathExtractor().calculate_path_from_function(f))
+            path: Path | None = PathExtractor().calculate_path_from_function(
+                f=f, width=self.img_width, height=self.img_height
+            )
+            if path:
+                self.path_box.add(path=path)
 
     def mirror_around_x(self, f: np.poly1d, x: float) -> np.poly1d:
         """
@@ -145,7 +149,7 @@ class PathPlanner:
 
         coeffs = -f.coeffs.copy()
         coeffs[-1] += 2 * x
-        return np.poly1d(coeffs)
+        return np.poly1d(c_or_r=coeffs)
 
 
 class Path:
@@ -156,14 +160,14 @@ class Path:
     def __init__(
         self,
         f: np.poly1d,
-        approx_pts: np.ndarray,
-        scope_definition: tuple,
-        value_range: tuple,
+        approx_pts: NDArray[np.uint8],
+        scope_definition: tuple[np.uint8, np.uint8],
+        value_range: tuple[np.uint8, np.uint8],
     ) -> None:
-        self.f = f
-        self.approx_pts = approx_pts
-        self.scope_definition = scope_definition
-        self.value_range = value_range
+        self.f: np.poly1d = f
+        self.approx_pts: NDArray[np.uint8] = approx_pts
+        self.scope_definition: tuple[np.uint8, np.uint8] = scope_definition
+        self.value_range: tuple[np.uint8, np.uint8] = value_range
 
 
 class PathExtractor:
@@ -175,9 +179,8 @@ class PathExtractor:
         - calculate_path_from_pts: Calculate a path from a set of points.
     """
 
-    def calculate_path_from_function(
-        self, f: np.poly1d, width: int, height: int
-    ) -> Path:
+    @staticmethod
+    def calculate_path_from_function(f: np.poly1d, width: int, height: int) -> Path | None:
         """
         Calculate a path from a polynomial function.
 
@@ -191,31 +194,37 @@ class PathExtractor:
         """
 
         # generate approximated points for y in [0, height]
-        approx_y = np.linspace(0, height, num=height + 1)
-        approx_x = f(approx_y)
+        approx_y: NDArray[np.uint8] = np.linspace(start=0, stop=height, num=height + 1, dtype=np.uint8)
+        approx_x: NDArray[np.uint8] = f(approx_y)
 
         # create mask for points within bounds
-        mask = (
-            (approx_x >= 0)
-            & (approx_x <= width)
-            & (approx_y >= 0)
-            & (approx_y <= height)
-        )
+        mask = (approx_x >= 0) & (approx_x <= width) & (approx_y >= 0) & (approx_y <= height)
 
         approx_x = approx_x[mask]
         approx_y = approx_y[mask]
 
         # create points (x, y)
-        approx_pts = np.stack([approx_x, approx_y], axis=1)
+        approx_pts: NDArray[np.uint8] = np.stack(arrays=[approx_x, approx_y], axis=1)
 
-        lowest_y = np.min(approx_y) if approx_y.size > 0 else None
-        highest_y = np.max(approx_y) if approx_y.size > 0 else None
-        lowest_x = np.min(approx_x) if approx_x.size > 0 else None
-        highest_x = np.max(approx_x) if approx_x.size > 0 else None
+        # it can be that the function we made with np.polyfit has no valid points in the given image
+        # and therefore there is no valid path
+        if approx_y.size > 0 and approx_x.size > 0:
+            lowest_y: np.uint8 = np.min(a=approx_y)
+            highest_y: np.uint8 = np.max(a=approx_y)
+            lowest_x: np.uint8 = np.min(a=approx_x)
+            highest_x: np.uint8 = np.max(a=approx_x)
 
-        return Path(f, approx_pts, (lowest_x, highest_x), (lowest_y, highest_y))
+            return Path(
+                f,
+                approx_pts=approx_pts,
+                scope_definition=(lowest_x, highest_x),
+                value_range=(lowest_y, highest_y),
+            )
+        else:
+            return None
 
-    def calculate_path_from_pts(self, pts: np.ndarray, width: int, height: int) -> Path:
+    @staticmethod
+    def calculate_path_from_pts(pts: NDArray[np.uint8], width: int, height: int) -> Path | None:
         """
         Calculate a path from a set of points.
 
@@ -228,10 +237,10 @@ class PathExtractor:
             Path: The calculated path.
         """
 
-        x = pts[:, 0]
-        y = pts[:, 1]
+        x: NDArray[np.uint8] = pts[:, 0]
+        y: NDArray[np.uint8] = pts[:, 1]
 
         # compute polynomial approximation x = f(y)
-        coeffs = np.polyfit(y, x, deg=2)
+        coeffs: NDArray[np.float64] = np.polyfit(x=y, y=x, deg=2)
 
-        return self.calculate_path_from_function(np.poly1d(coeffs), width, height)
+        return PathExtractor.calculate_path_from_function(f=np.poly1d(c_or_r=coeffs), width=width, height=height)

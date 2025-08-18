@@ -1,58 +1,59 @@
-from PySide6.QtWidgets import QWidget, QVBoxLayout, QPushButton, QHBoxLayout
-from PySide6.QtCore import Signal, Slot
-import numpy as np
-from modules import PathPlanner
+from PySide6.QtCore import Signal, Slot  # pyright: ignore[reportUnknownVariableType]
+from PySide6.QtWidgets import QHBoxLayout, QPushButton, QVBoxLayout, QWidget
+
+from modules import AnnotationsContainer, DirectionBox, PathPlanner, RoadObjectsBox, RoadSegmentsBox, SpeedBox
+from tools import Box, Extractors, Img
 
 
 class ModulTab(QWidget):
-    # emit the resutls
-    result_ready = Signal(object)
+    # emit the results
+    result_ready = Signal(AnnotationsContainer)
 
-    def __init__(self, parent=None):
-        super().__init__(parent)
-        self.img = None
-        self.modul = None
-        self.segments = None
+    def __init__(self, parent: QWidget | None = None) -> None:
+        super().__init__(parent=parent)
+        self.img: Img | None = None
+        self.modul: Extractors | None = None
 
         # ---------------- LAYOUT ------------------------
-        main_layout = QVBoxLayout(self)
+        main_layout = QVBoxLayout(parent=self)
 
         # top row
         top_layout = QHBoxLayout()
-        self.run_button = QPushButton("Run")
-        self.run_button.clicked.connect(self.process)
-        top_layout.addWidget(self.run_button)
+        self.run_button = QPushButton(text="Run")
+        self.run_button.clicked.connect(slot=self.process)
+        top_layout.addWidget(arg__1=self.run_button)
         # pushes everything else to the right
         top_layout.addStretch()
 
-        main_layout.addLayout(top_layout)
-        self.setLayout(main_layout)
+        main_layout.addLayout(layout=top_layout)
+        self.setLayout(arg__1=main_layout)
 
-    @Slot(np.ndarray)
-    def receive_image(self, img: np.ndarray):
-        self.img = img
+    @Slot(t1=AnnotationsContainer)
+    def receive_annotation_container(self, annotations_container: AnnotationsContainer) -> None:
+        self.annotations_container: AnnotationsContainer = annotations_container
 
-    def run(self):
-        self.thread.start()
-
-    def process(self):
-        if self.img is not None:
-            if self.modul is not None:
-                # if it is the PathPlanner, than insert the segments
-                if isinstance(self.modul, PathPlanner):
-                    segments = (
-                        self.parent()
-                        .parent()
-                        .parent()
-                        .parent()
-                        .parent()
-                        .parent()
-                        .image_viewer.segments
+    def process(self) -> None:
+        if self.modul is not None:
+            if isinstance(self.modul, PathPlanner):
+                # path planner needs the segments
+                if self.annotations_container.road_segments is not None:
+                    self.annotations_container.paths = self.modul.process(
+                        road_segment_box=self.annotations_container.road_segments,
+                        width=self.annotations_container.original_img.shape[1],
+                        height=self.annotations_container.original_img.shape[0],
                     )
-                    if segments is not None:
-                        results = self.modul.process(segments)
+            else:
+                result: Box | AnnotationsContainer = self.modul.process(self.annotations_container.original_img)
 
-                else:
-                    results = self.modul.process(self.img)
+                if isinstance(result, DirectionBox):
+                    self.annotations_container.direction = result
+                elif isinstance(result, SpeedBox):
+                    self.annotations_container.speed = result
+                elif isinstance(result, RoadObjectsBox):
+                    self.annotations_container.road_objects = result
+                elif isinstance(result, RoadSegmentsBox):
+                    self.annotations_container.road_segments = result
+                elif isinstance(result, AnnotationsContainer):
+                    self.annotations_container = result
 
-                self.result_ready.emit(results)
+        self.result_ready.emit(self.annotations_container)

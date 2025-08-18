@@ -2,40 +2,39 @@
 # The RoadSegmentsExtractor class is responsible for extracting road segments from images.
 #
 
-from modules.preprocessor import Preprocessor
-from ultralytics import YOLO
+from typing import Any, cast
+
 import cv2
 import numpy as np
-import numpy as np
-from configs import debug_default as config
+from numpy.typing import NDArray
+from ultralytics import YOLO  # pyright: ignore[reportMissingTypeStubs]
+from ultralytics.engine.results import Results  # pyright: ignore[reportMissingTypeStubs]
+
+from configs import globals
+from modules.preprocessor import Preprocessor
+from tools import Img, ImgT, LImg, LImgT
+
 from .data_containers import RoadSegmentsBox
 from .paths import Path, PathExtractor
 
 
 class RoadSegmentsExtractor:
-    """
-    The RoadSegmentsExtractor class is responsible for extracting road segments from images.
-
-    Methods:
-        - __init__: Initialize the RoadSegmentsExtractor.
-        - process: Process the input image for road segment extraction.
-        - segmenting: Segment the road into different classes and clean each segment.
-        - mask: Create a mask for the given polygon points.
-        - morph: Apply morphological operations to the mask.
-        - findContours: Find contours in the given mask.
-    """
-
     def __init__(self) -> None:
         """
-        Initialize the RoadSegmentsExtractor.
+        The RoadSegmentsExtractor class is responsible for extracting road segments from images.
+
+        Methods:
+            - __init__: Initialize the RoadSegmentsExtractor.
+            - process: Process the input image for road segment extraction.
+            - segmenting: Segment the road into different classes and clean each segment.
+            - mask: Create a mask for the given polygon points.
+            - morph: Apply morphological operations to the mask.
+            - findContours: Find contours in the given mask.
         """
 
-        self.img = None
-        self.prepro = Preprocessor()
-        self.seg_model_model = YOLO(config.SEGMENTATION_MODEL_PATH)
-        self.road_segments_box = None
+        self.seg_model_model = YOLO(model=globals.SEGMENTATION_MODEL_PATH)
 
-    def process(self, img: np.ndarray) -> None:
+    def process(self, img: Img) -> RoadSegmentsBox | None:
         """
         The processing pipeline for road segment extraction.
         """
@@ -43,14 +42,16 @@ class RoadSegmentsExtractor:
         self.road_segments_box = RoadSegmentsBox()
 
         # always create a copy of the original image for safety
-        self.img = img.copy()
+        self.img: Img = img.copy()
+        self.width: int = self.img.shape[1]
+        self.height: int = self.img.shape[0]
 
         # crop the image to remove the road advisor
-        self.img = img[config.ROADSEGMENT_EXTRACTION_CROP_TOP :, :, :]
+        self.img = img[globals.ROADSEGMENT_EXTRACTION_CROP_TOP :, :, :]
 
         # preprocess the image
-        self.img = self.prepro.process(self.img)
-        self.img = cv2.cvtColor(self.img, cv2.COLOR_BGR2RGB)
+        self.img = Preprocessor.process(img=self.img)
+        self.img = ImgT(img=cv2.cvtColor(src=self.img, code=cv2.COLOR_BGR2RGB))
 
         self.segmenting()
 
@@ -62,9 +63,9 @@ class RoadSegmentsExtractor:
         """
 
         # make the predictions
-        results = self.seg_model_model.predict(
-            self.img,
-            device=config.SEGMENTATION_MODEL_DEVICES,
+        results: list[Results] = self.seg_model_model.predict(  # pyright: ignore[reportUnknownMemberType]
+            source=self.img,
+            device=globals.SEGMENTATION_MODEL_DEVICES,
             batch=1,
             verbose=False,
             iou=0.45,
@@ -72,95 +73,103 @@ class RoadSegmentsExtractor:
         )
 
         for result in results:
-            if result.masks:
-                polygons = result.masks.xy
-                class_ids = result.boxes.cls.int().tolist()
+            if result.masks is None:
+                continue
+            polygons: list[np.ndarray[Any, Any]] = cast(list[np.ndarray[Any, Any]], result.masks.xy)  # pyright: ignore[reportUnknownMemberType]
 
-                for poly, cls in zip(polygons, class_ids):
+            if result.boxes is None:
+                continue
+            class_ids: np.ndarray[Any, Any] = cast(np.ndarray[Any, Any], result.boxes.cls).astype(dtype=int)  # pyright: ignore[reportUnknownMemberType]
 
-                    # reshape the ouput to an opencv format
-                    pts = poly.astype(np.int32).reshape((-1, 1, 2))
+            for poly, cls in zip(polygons, class_ids):
+                # reshape the ouput to an opencv format
+                pts: NDArray[np.uint8] = poly.astype(np.uint8).reshape((-1, 1, 2))
 
-                    # get the cleaned driveable area
-                    cnt = self.findContours(self.morph(self.mask(pts)))
+                # get the cleaned driveable area
+                cnt: NDArray[np.uint8] | None = self.findContours(mask=self.morph(mask=self.mask(pts=pts)))
 
-                    # create a approximation
-                    path = PathExtractor.calculate_path_from_pts(
-                        cnt, self.img.shape[:2]
-                    )
+                # create a approximation
+                if cnt is None:
+                    continue
+                path: Path | None = PathExtractor.calculate_path_from_pts(pts=cnt, width=self.width, height=self.height)
 
-                    # 0: Driveable
-                    # 1: Passable
-                    # 2: Impassable
+                # 0: Driveable
+                # 1: Passable
+                # 2: Impassable
 
+                if path is not None:
                     if cls == 0:
-                        self.road_segments_box.add(Driveable(cnt, path))
+                        self.road_segments_box.add(road_segment=Driveable(pts=cnt, path=path))
                     elif cls == 1:
-                        self.road_segments_box.add(Passable(cnt, path))
+                        self.road_segments_box.add(road_segment=Passable(pts=cnt, path=path))
                     elif cls == 2:
-                        self.road_segments_box.add(Impassable(cnt, path))
+                        self.road_segments_box.add(road_segment=Impassable(pts=cnt, path=path))
                     else:
                         raise ValueError(f"Unknown class ID: {cls}")
 
-    def mask(self, pts: np.ndarray) -> np.ndarray:
+    def mask(self, pts: NDArray[np.uint8]) -> NDArray[np.uint8]:
         """
         Create a mask for the given polygon points.
 
         Args:
-            pts (np.ndarray): The polygon points.
+            pts (NDArray[np.uint8]): The polygon points.
 
         Returns:
-            np.ndarray: The mask for the polygon.
+            NDArray[np.uint8]: The mask for the polygon.
         """
 
         # create blank mask for current polygon
-        mask = np.zeros(self.img.shape[:2], dtype=np.uint8)
+        mask: NDArray[np.uint8] = np.zeros(self.img.shape[:2], dtype=np.uint8)
         # fill it with the segment
-        cv2.fillPoly(mask, [pts], 255)
+        cv2.fillPoly(img=mask, pts=[pts], color=255)
 
         return mask
 
-    def morph(self, mask: np.ndarray) -> np.ndarray:
+    def morph(self, mask: NDArray[np.uint8]) -> NDArray[np.uint8]:
         """
         Apply morphological operations to clean the mask.
 
         Args:
-            mask (np.ndarray): The input mask.
+            mask (NDArray[np.uint8]): The input mask.
 
         Returns:
-            np.ndarray: The cleaned mask.
+            NDArray[np.uint8]: The cleaned mask.
         """
 
-        kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (3, 3))
+        kernel: np.ndarray[Any, Any] = cv2.getStructuringElement(shape=cv2.MORPH_ELLIPSE, ksize=(3, 3))
 
         # first opening to remove noise
-        opened_mask = cv2.morphologyEx(mask, cv2.MORPH_OPEN, kernel)
+        opened_mask: np.ndarray[Any, Any] = cv2.morphologyEx(src=mask, op=cv2.MORPH_OPEN, kernel=kernel)
 
         # then closing to close gaps inside the objects
-        cleaned_mask = cv2.morphologyEx(opened_mask, cv2.MORPH_CLOSE, kernel)
+        cleaned_mask: NDArray[np.uint8] = cast(
+            NDArray[np.uint8], cv2.morphologyEx(src=opened_mask, op=cv2.MORPH_CLOSE, kernel=kernel)
+        )
 
         return cleaned_mask
 
-    def findContours(self, mask: np.ndarray) -> np.ndarray:
+    def findContours(self, mask: NDArray[np.uint8]) -> NDArray[np.uint8] | None:
         """
         Find contours in the given mask.
 
         Args:
-            mask (np.ndarray): The input mask.
+            mask (NDArray[np.uint8]): The input mask.
 
         Returns:
-            np.ndarray: The contours found in the mask.
+            NDArray[np.uint8]: The contours found in the mask.
         """
 
         # get the contours
-        contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+        contours: LImg = LImgT(
+            img=cv2.findContours(image=mask, mode=cv2.RETR_EXTERNAL, method=cv2.CHAIN_APPROX_SIMPLE)[0]
+        )
 
         if not contours:
             # no contours found
             return None
 
         # get the biggest contour by area
-        cnt = max(contours, key=cv2.contourArea)
+        cnt: NDArray[np.uint8] = max(contours, key=cv2.contourArea)
 
         return cnt
 
@@ -168,28 +177,40 @@ class RoadSegmentsExtractor:
 class Driveable:
     """
     This class holds the information for a driveable area.
+
+    Args:
+        pts (NDArray[np.uint8]): The points of the polygon.
+        path (Path): The path associated with the polygon.
     """
 
-    def __init__(self, pts: np.ndarray, path: Path) -> None:
-        self.pts = pts
-        self.path = path
+    def __init__(self, pts: NDArray[np.uint8], path: Path) -> None:
+        self.pts: NDArray[np.uint8] = pts
+        self.path: Path = path
 
 
 class Impassable:
     """
     This class holds the information for a impassable lane.
+
+    Args:
+        pts (NDArray[np.uint8]): The points of the polygon.
+        path (Path): The path associated with the polygon.
     """
 
-    def __init__(self, pts: np.ndarray, path: Path) -> None:
-        self.pts = pts
-        self.path = path
+    def __init__(self, pts: NDArray[np.uint8], path: Path) -> None:
+        self.pts: NDArray[np.uint8] = pts
+        self.path: Path = path
 
 
 class Passable:
     """
     This class holds the information for a passable lane.
+
+    Args:
+        pts (NDArray[np.uint8]): The points of the polygon.
+        path (Path): The path associated with the polygon.
     """
 
-    def __init__(self, pts: np.ndarray, path: Path) -> None:
-        self.pts = pts
-        self.path = path
+    def __init__(self, pts: NDArray[np.uint8], path: Path) -> None:
+        self.pts: NDArray[np.uint8] = pts
+        self.path: Path = path

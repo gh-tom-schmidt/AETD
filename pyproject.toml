@@ -1,0 +1,17 @@
+#
+# pyproject.toml
+#
+
+[tool.isort]
+profile = "black"              # Keeps imports consistent with Black-style (works fine with YAPF)
+line_length = 120
+multi_line_output = 3
+include_trailing_comma = true
+force_grid_wrap = 0
+use_parentheses = true
+
+[tool.ruff]
+line-length = 120
+select = ["E", "F", "W", "I", "C"]  # Include common lint rules
+ignore = ["E501"]                     # Ignore line length errors
+fix = true                             # Auto-fix issues

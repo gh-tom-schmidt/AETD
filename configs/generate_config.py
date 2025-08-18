@@ -1,3 +1,3 @@
-from configs import GenerateConfig
+from configs import Config
 
-GenerateConfig("configs/debug_default.conf")
+Config("configs/debug_default.conf")

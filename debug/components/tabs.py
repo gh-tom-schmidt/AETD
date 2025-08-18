@@ -1,44 +1,49 @@
+from PySide6.QtWidgets import QWidget
+
 from modules import (
-    NavigationDataExtractor,
-    SpeedDataExtractor,
-    RoadObjectDetector,
-    RoadSegmentor,
+    DirectionExtractor,
     PathPlanner,
+    Pipeline,
+    RoadObjectExtractor,
+    RoadSegmentsExtractor,
+    SpeedDataExtractor,
 )
+
 from .module_tab import ModulTab
-from configs import (
-    CLASSIFICATION_MODEL_PATH,
-    SEGMENTATION_MODEL_PATH,
-    DETECTION_MODEL_PATH,
-)
 
 
-class NavTab(ModulTab):
-    def __init__(self, parent=None):
-        super().__init__(parent)
-        self.modul = NavigationDataExtractor()
+class DirectionsTab(ModulTab):
+    def __init__(self, parent: QWidget | None = None) -> None:
+        super().__init__(parent=parent)
+        self.modul = DirectionExtractor()
 
 
 class SpeedTab(ModulTab):
-    def __init__(self, parent=None):
-        super().__init__(parent)
+    def __init__(self, parent: QWidget | None = None) -> None:
+        super().__init__(parent=parent)
         self.modul = SpeedDataExtractor()
 
 
 class RoadObjectTab(ModulTab):
-    def __init__(self, parent=None):
-        super().__init__(parent)
-        self.modul = RoadObjectDetector(DETECTION_MODEL_PATH, CLASSIFICATION_MODEL_PATH)
+    def __init__(self, parent: QWidget | None = None) -> None:
+        super().__init__(parent=parent)
+        self.modul = RoadObjectExtractor()
 
 
 class SegmentorTab(ModulTab):
-    def __init__(self, parent=None):
-        super().__init__(parent)
-        self.modul = RoadSegmentor(SEGMENTATION_MODEL_PATH)
+    def __init__(self, parent: QWidget | None = None) -> None:
+        super().__init__(parent=parent)
+        self.modul = RoadSegmentsExtractor()
 
 
 # the path planner needs previously calculated segments to work
 class PathTab(ModulTab):
-    def __init__(self, parent=None):
-        super().__init__(parent)
+    def __init__(self, parent: QWidget | None = None) -> None:
+        super().__init__(parent=parent)
         self.modul = PathPlanner()
+
+
+class FullAnnotationTab(ModulTab):
+    def __init__(self, parent: QWidget | None = None) -> None:
+        super().__init__(parent=parent)
+        self.modul = Pipeline()
