@@ -1,3 +1,3 @@
 from .main_layout import MainWindow
 
-__all__ = ["MainWindow"]
+__all__: list[str] = ["MainWindow"]

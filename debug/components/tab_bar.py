@@ -1,9 +1,11 @@
-from PySide6.QtWidgets import QTabWidget, QWidget, QHBoxLayout, QPushButton
-from .tabs import NavTab, SpeedTab, RoadObjectTab, SegmentorTab, PathTab
+from PySide6.QtWidgets import QHBoxLayout, QTabWidget, QWidget
+
+from .module_tab import ModulTab
+from .tabs import DirectionsTab, FullAnnotationTab, PathTab, RoadObjectTab, SegmentorTab, SpeedTab
 
 
 class ModuleTabBar(QWidget):
-    def __init__(self, parent=None):
+    def __init__(self, parent: QWidget | None = None) -> None:
         super().__init__(parent)
 
         # layout to hold both the tab bar and the button
@@ -14,11 +16,11 @@ class ModuleTabBar(QWidget):
         layout.addWidget(self.tab_widget)
 
         # save all tabs
-        self.tabs = []
+        self.tabs: list[ModulTab] = []
 
         # hook tabs
-        tab = NavTab()
-        self.tab_widget.addTab(tab, "Navigation Data Extractor")
+        tab = DirectionsTab()
+        self.tab_widget.addTab(tab, "Direction Data Extractor")
         self.tabs.append(tab)
 
         tab = SpeedTab()
@@ -33,16 +35,10 @@ class ModuleTabBar(QWidget):
         self.tab_widget.addTab(tab, "Road Segmentor")
         self.tabs.append(tab)
 
-        # add self here to get already calculated segments from the image viewer
-        tab = PathTab(self)
+        tab = PathTab()
         self.tab_widget.addTab(tab, "Path Planner")
         self.tabs.append(tab)
 
-        # "run all modules at once" button
-        run_button = QPushButton("Run All")
-        run_button.clicked.connect(self.run_all_processes)
-        layout.addWidget(run_button)
-
-    def run_all_processes(self):
-        for tab in self.tabs:
-            tab.process()
+        tab = FullAnnotationTab()
+        self.tab_widget.addTab(tab, "Full Annotation Pipeline")
+        self.tabs.append(tab)

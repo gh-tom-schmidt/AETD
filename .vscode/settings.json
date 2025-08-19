@@ -1,3 +1,35 @@
 {
-    "python-envs.pythonProjects": []
+    // Python formatting
+    "[python]": {
+        "editor.formatOnSave": true
+    },
+
+    // Editor preferences
+    "editor.tabSize": 4,
+    "editor.insertSpaces": true,
+    "editor.wordWrap": "off",
+    "editor.rulers": [120],
+    "editor.fontSize": 14,
+    "editor.lineHeight": 23,
+
+    // strict typing
+    "python.analysis.generateWithTypeAnnotation": true,
+    "python.analysis.inlayHints.callArgumentNames": "all",
+    "python.analysis.inlayHints.functionReturnTypes": true,
+    "python.analysis.inlayHints.pytestParameters": true,
+    "python.analysis.inlayHints.variableTypes": true,
+    "python.analysis.typeCheckingMode": "strict",
+    "python.analysis.typeEvaluation.enableTypeIgnoreComments": true,
+    "python.analysis.typeEvaluation.enableReachabilityAnalysis": true,
+    "python.analysis.typeEvaluation.strictDictionaryInference": true,
+    "python.analysis.typeEvaluation.deprecateTypingAliases": true,
+    "python.analysis.typeEvaluation.strictListInference": true,
+    "python.analysis.typeEvaluation.strictSetInference": true,
+    
+    // testing
+    "python.testing.pytestArgs": [
+        "."
+    ],
+    "python.testing.unittestEnabled": false,
+    "python.testing.pytestEnabled": true,
 }

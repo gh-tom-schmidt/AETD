@@ -4,3 +4,8 @@ tqdm
 ultralytics
 easyocr
 PySide6
+PySide6-stubs
+isort 
+ruff
+pytest 
+pytest-qt 

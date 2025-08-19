@@ -1,3 +1,4 @@
-from .config import Config, GenerateConfig
+from .config import Config
+from .globals import *  # noqa: F403
 
-__all__ = ["Config", "GenerateConfig"]
+__all__: list[str] = ["Config", "globals"]
