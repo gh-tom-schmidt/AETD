@@ -1,0 +1,50 @@
+# Normalize line endings for all text files
+* text=auto
+
+# Explicit language overrides (GitHub Linguist)
+*.c        linguist-language=C
+*.cpp      linguist-language=C++
+*.h        linguist-language=C
+*.hpp      linguist-language=C++
+*.py       linguist-language=Python
+*.java     linguist-language=Java
+*.js       linguist-language=JavaScript
+*.ts       linguist-language=TypeScript
+*.jsx      linguist-language=JavaScript
+*.tsx      linguist-language=TypeScript
+*.html     linguist-language=HTML
+*.css      linguist-language=CSS
+*.json     linguist-language=JSON
+*.md       linguist-language=Markdown
+*.sh       linguist-language=Shell
+*.rb       linguist-language=Ruby
+*.go       linguist-language=Go
+*.rs       linguist-language=Rust
+*.php      linguist-language=PHP
+*.swift    linguist-language=Swift
+*.kt       linguist-language=Kotlin
+*.m        linguist-language=Objective-C
+*.pl       linguist-language=Perl
+*.r        linguist-language=R
+*.scala    linguist-language=Scala
+*.lua      linguist-language=Lua
+*.dart     linguist-language=Dart
+
+# Ignore vendor or dependency folders from language stats
+/vendor/** linguist-vendored
+/node_modules/** linguist-vendored
+/.gradle/** linguist-vendored
+/.idea/** linguist-vendored
+/.vscode/** linguist-vendored
+/.git/** linguist-vendored
+
+# Treat images, binaries, archives as binary
+*.png    binary
+*.jpg    binary
+*.jpeg   binary
+*.gif    binary
+*.ico    binary
+*.pdf    binary
+*.zip    binary
+*.tar    binary
+*.gz     binary
