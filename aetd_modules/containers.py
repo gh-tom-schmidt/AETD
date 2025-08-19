@@ -3,13 +3,12 @@
 #
 
 import numpy as np
+from cv2.typing import MatLike
 from numpy.typing import NDArray
-
-from .types import Img
 
 
 class AnnotationsContainer:
-    def __init__(self, img: Img) -> None:
+    def __init__(self, img: MatLike) -> None:
         """
         The AnnotationsContainer class holds various data attributes related to the image processing pipeline.
 
@@ -26,9 +25,9 @@ class AnnotationsContainer:
             paths (PathsBox | None): The paths.
         """
 
-        self.original_img: Img = img
+        self.original_img: MatLike = img
         # on initialization the original and annotated images are the same
-        self.annotated_img: Img = img.copy()
+        self.annotated_img: MatLike = img.copy()
 
         self.speed: SpeedBox | None = None
         self.direction: DirectionBox | None = None
@@ -91,14 +90,14 @@ class Path:
     def __init__(
         self,
         f: np.poly1d,
-        approx_pts: NDArray[np.uint8],
-        scope_definition: tuple[np.uint8, np.uint8],
-        value_range: tuple[np.uint8, np.uint8],
+        approx_pts: NDArray[np.int32],
+        scope_definition: tuple[np.int32, np.int32],
+        value_range: tuple[np.int32, np.int32],
     ) -> None:
         self.f: np.poly1d = f
-        self.approx_pts: NDArray[np.uint8] = approx_pts
-        self.scope_definition: tuple[np.uint8, np.uint8] = scope_definition
-        self.value_range: tuple[np.uint8, np.uint8] = value_range
+        self.approx_pts: NDArray[np.int32] = approx_pts
+        self.scope_definition: tuple[np.int32, np.int32] = scope_definition
+        self.value_range: tuple[np.int32, np.int32] = value_range
 
 
 class PathsBox(list[Path]):
@@ -210,12 +209,12 @@ class Driveable:
     This class holds the information for a driveable area.
 
     Args:
-        pts (NDArray[np.uint8]): The points of the polygon.
+        pts (NDArray[np.int32]): The points of the polygon.
         path (Path): The path associated with the polygon.
     """
 
-    def __init__(self, pts: NDArray[np.uint8], path: Path) -> None:
-        self.pts: NDArray[np.uint8] = pts
+    def __init__(self, pts: NDArray[np.int32], path: Path) -> None:
+        self.pts: NDArray[np.int32] = pts
         self.path: Path = path
 
 
@@ -224,12 +223,12 @@ class Impassable:
     This class holds the information for a impassable lane.
 
     Args:
-        pts (NDArray[np.uint8]): The points of the polygon.
+        pts (NDArray[np.int32]): The points of the polygon.
         path (Path): The path associated with the polygon.
     """
 
-    def __init__(self, pts: NDArray[np.uint8], path: Path) -> None:
-        self.pts: NDArray[np.uint8] = pts
+    def __init__(self, pts: NDArray[np.int32], path: Path) -> None:
+        self.pts: NDArray[np.int32] = pts
         self.path: Path = path
 
 
@@ -238,12 +237,12 @@ class Passable:
     This class holds the information for a passable lane.
 
     Args:
-        pts (NDArray[np.uint8]): The points of the polygon.
+        pts (NDArray[np.int32]): The points of the polygon.
         path (Path): The path associated with the polygon.
     """
 
-    def __init__(self, pts: NDArray[np.uint8], path: Path) -> None:
-        self.pts: NDArray[np.uint8] = pts
+    def __init__(self, pts: NDArray[np.int32], path: Path) -> None:
+        self.pts: NDArray[np.int32] = pts
         self.path: Path = path
 
 

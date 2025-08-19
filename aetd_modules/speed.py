@@ -7,11 +7,11 @@ from typing import cast
 
 import cv2
 import easyocr  # pyright: ignore[reportMissingTypeStubs]
+from cv2.typing import MatLike
 
 from configs import globals
 
 from .containers import SpeedBox
-from .types import Img, ImgT
 
 
 class SpeedDataExtractor:
@@ -33,7 +33,7 @@ class SpeedDataExtractor:
         self.speed: int | None = None
         self.reader: easyocr.Reader = easyocr.Reader(lang_list=["en"], gpu=globals.SPEED_EXTRACTION_EASYOCR_DEVICES)
 
-    def process(self, img: Img) -> SpeedBox | None:
+    def process(self, img: MatLike) -> SpeedBox | None:
         """
         Processing pipeline for the input image to extract speed data.
 
@@ -45,7 +45,7 @@ class SpeedDataExtractor:
         """
 
         # always create a copy of the original image for safety
-        self.img: Img = img.copy()
+        self.img: MatLike = img.copy()
 
         self.crop()
         self.gray()
@@ -74,14 +74,14 @@ class SpeedDataExtractor:
         Convert the image to grayscale.
         """
 
-        self.img = ImgT(img=cv2.cvtColor(src=self.img, code=cv2.COLOR_BGR2GRAY))
+        self.img = cv2.cvtColor(src=self.img, code=cv2.COLOR_BGR2GRAY)
 
     def sharpen(self) -> None:
         """
         (Un)Sharpen the image.
         """
 
-        blurred: Img = ImgT(img=cv2.GaussianBlur(src=self.img, ksize=(0, 0), sigmaX=2))
+        blurred: MatLike = cv2.GaussianBlur(src=self.img, ksize=(0, 0), sigmaX=2)
         cv2.addWeighted(
             src1=self.img,
             alpha=1 + globals.SPEED_EXTRACTION_SHARPEN_AMOUNT,
@@ -95,14 +95,14 @@ class SpeedDataExtractor:
         Apply binary thresholding to the image.
         """
 
-        self.img = ImgT(img=cv2.threshold(src=self.img, thresh=200, maxval=255, type=cv2.THRESH_BINARY)[1])
+        self.img = cv2.threshold(src=self.img, thresh=200, maxval=255, type=cv2.THRESH_BINARY)[1]
 
     def read_speed(self) -> None:
         """
         Read the speed from the processed image using OCR.
         """
 
-        self.img = ImgT(img=cv2.cvtColor(src=self.img, code=cv2.COLOR_BGR2RGB))
+        self.img = cv2.cvtColor(src=self.img, code=cv2.COLOR_BGR2RGB)
         self.result: list[str] = cast(list[str], self.reader.readtext(image=self.img, detail=0))  # pyright: ignore[reportUnknownMemberType]
         # make sure that there is only one result
         if len(self.result) == 1:

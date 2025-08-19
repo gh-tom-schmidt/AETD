@@ -69,7 +69,7 @@ class PathPlanner:
             float: The distance of the lane to the center of the image.
         """
 
-        x: NDArray[np.uint8] = lane.path.approx_pts[:, 0]
+        x: NDArray[np.int32] = lane.path.approx_pts[:, 0]
         # compute mean absolute distance to center
         return float(np.mean(x - self.img_width // 2))
 
@@ -175,8 +175,8 @@ class PathExtractor:
         """
 
         # generate approximated points for y in [0, height]
-        approx_y: NDArray[np.uint8] = np.linspace(start=0, stop=height, num=height + 1, dtype=np.uint8)
-        approx_x: NDArray[np.uint8] = f(approx_y)
+        approx_y: NDArray[np.int32] = np.linspace(start=0, stop=height, num=height + 1, dtype=np.int32)
+        approx_x: NDArray[np.int32] = f(approx_y)
 
         # create mask for points within bounds
         mask = (approx_x >= 0) & (approx_x <= width) & (approx_y >= 0) & (approx_y <= height)
@@ -185,15 +185,15 @@ class PathExtractor:
         approx_y = approx_y[mask]
 
         # create points (x, y)
-        approx_pts: NDArray[np.uint8] = np.stack(arrays=[approx_x, approx_y], axis=1)
+        approx_pts: NDArray[np.int32] = np.stack(arrays=[approx_x, approx_y], axis=1)
 
         # it can be that the function we made with np.polyfit has no valid points in the given image
         # and therefore there is no valid path
         if approx_y.size > 0 and approx_x.size > 0:
-            lowest_y: np.uint8 = np.min(a=approx_y)
-            highest_y: np.uint8 = np.max(a=approx_y)
-            lowest_x: np.uint8 = np.min(a=approx_x)
-            highest_x: np.uint8 = np.max(a=approx_x)
+            lowest_y: np.int32 = np.min(a=approx_y)
+            highest_y: np.int32 = np.max(a=approx_y)
+            lowest_x: np.int32 = np.min(a=approx_x)
+            highest_x: np.int32 = np.max(a=approx_x)
 
             return Path(
                 f,
@@ -205,7 +205,7 @@ class PathExtractor:
             return None
 
     @staticmethod
-    def calculate_path_from_pts(pts: NDArray[np.uint8], width: int, height: int) -> Path | None:
+    def calculate_path_from_pts(pts: NDArray[np.int32], width: int, height: int) -> Path | None:
         """
         Calculate a path from a set of points.
 
@@ -218,8 +218,8 @@ class PathExtractor:
             Path: The calculated path.
         """
 
-        x: NDArray[np.uint8] = pts[:, 0]
-        y: NDArray[np.uint8] = pts[:, 1]
+        x: NDArray[np.int32] = pts[:, 0]
+        y: NDArray[np.int32] = pts[:, 1]
 
         # compute polynomial approximation x = f(y)
         coeffs: NDArray[np.float64] = np.polyfit(x=y, y=x, deg=2)

@@ -3,14 +3,16 @@
 # by evaluating the road advisor.
 #
 
+from collections.abc import Sequence
+
 import cv2
 import numpy as np
+from cv2.typing import MatLike
 from numpy import intp
 
 from configs import globals
 
 from .containers import DirectionBox
-from .types import Img, ImgT, LImg, LImgT
 
 
 class DirectionExtractor:
@@ -35,19 +37,19 @@ class DirectionExtractor:
         pass
 
     @staticmethod
-    def process(raw_img: Img) -> DirectionBox | None:
+    def process(raw_img: MatLike) -> DirectionBox | None:
         """
         The processing pipeline for extracting navigation data from the image.
 
         Args:
-            raw_img (Img): The input image from which to extract navigation data.
+            raw_img (MatLike): The input image from which to extract navigation data.
 
         Returns:
             DirectionBox | None: The extracted direction data or None.
         """
 
         # always create a copy of the original image for safety
-        img: Img = raw_img.copy()
+        img: MatLike = raw_img.copy()
         img = DirectionExtractor.crop(img=img, height=img.shape[0], width=img.shape[1])
 
         # take the width and height from the image after the cropping
@@ -68,17 +70,17 @@ class DirectionExtractor:
             return None
 
     @staticmethod
-    def crop(img: Img, width: int, height: int) -> Img:
+    def crop(img: MatLike, width: int, height: int) -> MatLike:
         """
         Crop the image to the region of interest defined in the config.
 
         Args:
-            img (Img): The input image to crop.
+            img (MatLike): The input image to crop.
             width (int): The width of the image.
             height (int): The height of the image.
 
         Returns:
-            Img: The cropped image.
+            MatLike: The cropped image.
         """
 
         top: int = globals.DIRECTION_EXTRACTION_CROP_TOP
@@ -90,21 +92,21 @@ class DirectionExtractor:
         return img
 
     @staticmethod
-    def getRedComponents(img: Img) -> Img:
+    def getRedComponents(img: MatLike) -> MatLike:
         """
         Enhance the red components (pixels that are mostly red) of the image.
 
         Args:
-            img (Img): The input image to process.
+            img (MatLike): The input image to process.
 
         Returns:
-            Img: The processed image with enhanced red components.
+            MatLike: The processed image with enhanced red components.
         """
 
-        b: Img
-        g: Img
-        r: Img
-        b, g, r = LImgT(img=cv2.split(m=img))
+        b: MatLike
+        g: MatLike
+        r: MatLike
+        b, g, r = cv2.split(m=img)
 
         red_dominant = (r > globals.DIRECTION_EXTRACTION_RED_THRESHOLD) & (r > g) & (r > b)
         img = np.zeros_like(a=img)
@@ -113,68 +115,66 @@ class DirectionExtractor:
         return img
 
     @staticmethod
-    def gray(img: Img) -> Img:
+    def gray(img: MatLike) -> MatLike:
         """
         Convert the image to grayscale.
 
         Args:
-            img (Img): The input image to process.
+            img (MatLike): The input image to process.
 
         Returns:
-            Img: The processed image in grayscale.
+            MatLike: The processed image in grayscale.
         """
 
-        img = ImgT(img=cv2.cvtColor(src=img, code=cv2.COLOR_BGR2GRAY))
+        img = cv2.cvtColor(src=img, code=cv2.COLOR_BGR2GRAY)
         return img
 
     @staticmethod
-    def binary(img: Img) -> Img:
+    def binary(img: MatLike) -> MatLike:
         """
         Apply binary thresholding to the image to only get the red parts.
 
         Args:
-            img (Img): The input image to process.
+            img (MatLike): The input image to process.
 
         Returns:
-            Img: The processed image with binary thresholding applied.
+            MatLike: The processed image with binary thresholding applied.
         """
 
-        img = ImgT(img=cv2.threshold(src=img, thresh=1, maxval=255, type=cv2.THRESH_BINARY)[1])
+        img = cv2.threshold(src=img, thresh=1, maxval=255, type=cv2.THRESH_BINARY)[1]
         return img
 
     @staticmethod
-    def findContours(img: Img) -> Img:
+    def findContours(img: MatLike) -> MatLike:
         """
         Find contours of the red parts in the image.
 
         Args:
-            img (Img): The input image to process.
+            img (MatLike): The input image to process.
 
         Returns:
-            Img: The processed image with contours drawn.
+            MatLike: The processed image with contours drawn.
         """
 
-        contours: LImg = LImgT(
-            img=cv2.findContours(image=img, mode=cv2.RETR_EXTERNAL, method=cv2.CHAIN_APPROX_SIMPLE)[0]
-        )
+        contours: Sequence[MatLike] = cv2.findContours(
+            image=img, mode=cv2.RETR_EXTERNAL, method=cv2.CHAIN_APPROX_SIMPLE
+        )[0]
         img = np.zeros_like(a=img)
         for cnt in contours:
             area: float = cv2.contourArea(contour=cnt)
             if area >= globals.DIRECTION_EXTRACTION_CONTOUR_MIN_AREA:
-                img = ImgT(
-                    img=cv2.drawContours(
-                        image=img,
-                        contours=[cnt],
-                        contourIdx=-1,
-                        color=255,
-                        thickness=cv2.FILLED,
-                    )
+                img = cv2.drawContours(
+                    image=img,
+                    contours=[cnt],
+                    contourIdx=-1,
+                    color=255,
+                    thickness=cv2.FILLED,
                 )
 
         return img
 
     @staticmethod
-    def calculateBias(img: Img, width: int, height: int) -> int:
+    def calculateBias(img: MatLike, width: int, height: int) -> int:
         """
         Get the bias of the detected direction where negative means left and
         positive means right.
@@ -189,14 +189,14 @@ class DirectionExtractor:
         """
 
         center_x: int = width // 2
-        top_half: Img = img[: height // 2, :]
+        top_half: MatLike = img[: height // 2, :]
         xs = np.where(top_half == 255)[1]
         bias: intp = np.sum(a=xs - center_x)
         max_bias: int = len(xs) * center_x
         return int((bias / max_bias) * 100)
 
     @staticmethod
-    def calculateOnLane(img: Img, width: int, height: int) -> float:
+    def calculateOnLane(img: MatLike, width: int, height: int) -> float:
         """
         Calculate the on-lane ratio based on the detected red parts where
         1 means fully on lane and 0 means fully off lane.
@@ -210,7 +210,7 @@ class DirectionExtractor:
             float: The calculated on-lane ratio.
         """
 
-        pillar: Img = img[
+        pillar: MatLike = img[
             : height // 2,
             globals.DIRECTION_EXTRACTION_CENTER_PILLAR_CROP : width - globals.DIRECTION_EXTRACTION_CENTER_PILLAR_CROP,
         ]

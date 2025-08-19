@@ -21,7 +21,6 @@ from .preprocessor import Preprocessor
 from .road_objects import RoadObjectExtractor
 from .road_segmentations import RoadSegmentsExtractor
 from .speed import SpeedDataExtractor
-from .types import Float, Img, ImgT, LImg, LImgT
 
 __all__: list[str] = [
     "DirectionExtractor",
@@ -46,9 +45,4 @@ __all__: list[str] = [
     "AnnotationsContainer",
     "Draw",
     "Pipeline",
-    "Float",
-    "Img",
-    "ImgT",
-    "LImg",
-    "LImgT",
 ]

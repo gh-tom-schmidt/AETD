@@ -1,3 +1,4 @@
+from cv2.typing import MatLike
 from PySide6.QtCore import Signal, Slot  # pyright: ignore[reportUnknownVariableType]
 from PySide6.QtWidgets import QHBoxLayout, QPushButton, QVBoxLayout, QWidget
 
@@ -5,7 +6,6 @@ from aetd_modules import (
     AnnotationsContainer,
     DirectionBox,
     DirectionExtractor,
-    Img,
     PathPlanner,
     PathsBox,
     Pipeline,
@@ -35,7 +35,7 @@ class ModulTab(QWidget):
 
     def __init__(self, parent: QWidget | None = None) -> None:
         super().__init__(parent)
-        self.img: Img | None = None
+        self.img: MatLike | None = None
         self.modul: Extractors | None = None
 
         # ---------------- LAYOUT ------------------------

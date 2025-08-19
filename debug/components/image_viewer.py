@@ -1,10 +1,10 @@
 import cv2
-from cv2.typing import NumPyArrayNumeric
+from cv2.typing import MatLike, NumPyArrayNumeric
 from PySide6.QtCore import Qt, Signal, Slot  # pyright: ignore[reportUnknownVariableType]
 from PySide6.QtGui import QImage, QPixmap, QResizeEvent
 from PySide6.QtWidgets import QLabel, QSizePolicy, QWidget
 
-from aetd_modules import AnnotationsContainer, Draw, Img, ImgT
+from aetd_modules import AnnotationsContainer, Draw
 
 
 class ImageViewer(QLabel):
@@ -21,7 +21,7 @@ class ImageViewer(QLabel):
         # load the given image
         img: cv2.Mat | NumPyArrayNumeric | None = cv2.imread(filename=img_path, flags=cv2.IMREAD_COLOR)
         if img is not None:
-            self.annotations_container: AnnotationsContainer = AnnotationsContainer(img=ImgT(img=img))
+            self.annotations_container: AnnotationsContainer = AnnotationsContainer(img=img)
         else:
             raise ValueError(f"Image at {img_path} could not be loaded.")
 
@@ -31,7 +31,7 @@ class ImageViewer(QLabel):
     def redraw(self) -> None:
         Draw.draw(annotations=self.annotations_container)
 
-        rgb_image: Img = ImgT(img=cv2.cvtColor(src=self.annotations_container.annotated_img, code=cv2.COLOR_BGR2RGB))
+        rgb_image: MatLike = cv2.cvtColor(src=self.annotations_container.annotated_img, code=cv2.COLOR_BGR2RGB)
 
         h: int = rgb_image.shape[0]
         w: int = rgb_image.shape[1]

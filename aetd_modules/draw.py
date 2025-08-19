@@ -1,11 +1,9 @@
 import cv2
-from numpy import uint8
-from numpy.typing import NDArray
+from cv2.typing import MatLike, NumPyArrayNumeric
 
 from configs import globals
 
 from .containers import AnnotationsContainer, Driveable, Impassable, Passable, Path, Sign, TrafficLight, Vehicle
-from .types import Img
 
 
 class Draw:
@@ -17,24 +15,35 @@ class Draw:
 
     @staticmethod
     def draw(annotations: AnnotationsContainer) -> AnnotationsContainer:
-        img: Img = annotations.original_img.copy()
+        img: MatLike = annotations.original_img.copy()
 
-        if annotations.direction:
+        if annotations.direction is not None:
             img = Draw.draw_direction(img=img, advice=annotations.direction)
-        if annotations.speed:
+        if annotations.speed is not None:
             img = Draw.draw_speed(img=img, speed=annotations.speed)
-        if annotations.road_objects:
+        if annotations.road_objects is not None:
             img = Draw.draw_road_objects(img=img, objects=annotations.road_objects)
-        if annotations.road_segments:
+        if annotations.road_segments is not None:
             img = Draw.draw_road_segments(img=img, segments=annotations.road_segments)
-        if annotations.paths:
+        if annotations.paths is not None:
             img = Draw.draw_paths(img=img, paths=annotations.paths)
 
         annotations.annotated_img = img
         return annotations
 
     @staticmethod
-    def draw_direction(img: Img, advice: int) -> Img:
+    def draw_direction(img: MatLike, advice: int) -> MatLike:
+        """
+        Draw the directions as information on the image.
+
+        Args:
+            img (MatLike): The image to draw on.
+            advice (int): The direction advice (-1 for left, 1 for right).
+
+        Returns:
+            MatLike: The image with the direction drawn on it.
+        """
+
         if advice == -1:
             text = "Turn Left"
         elif advice == 1:
@@ -66,7 +75,18 @@ class Draw:
         return img
 
     @staticmethod
-    def draw_speed(img: Img, speed: int) -> Img:
+    def draw_speed(img: MatLike, speed: int) -> MatLike:
+        """
+        Draw the speed as information on the image.
+
+        Args:
+            img (MatLike): The image to draw on.
+            speed (int): The speed to display.
+
+        Returns:
+            MatLike: The image with the speed drawn on it.
+        """
+
         text: str = f"Speed: {speed} km/h"
 
         font: int = cv2.FONT_HERSHEY_SIMPLEX
@@ -91,7 +111,18 @@ class Draw:
         return img
 
     @staticmethod
-    def draw_road_objects(img: Img, objects: list[Vehicle | Sign | TrafficLight]) -> Img:
+    def draw_road_objects(img: MatLike, objects: list[Vehicle | Sign | TrafficLight]) -> MatLike:
+        """
+        Draw the road objects as bounding boxes on the image.
+
+        Args:
+            img (MatLike): The image to draw on.
+            objects (list[Vehicle | Sign | TrafficLight]): The road objects to draw.
+
+        Returns:
+            MatLike: The image with the road objects drawn on it.
+        """
+
         for obj in objects:
             # [x1, y1, x2, y2]
             x1, y1, x2, y2 = obj.coords
@@ -124,7 +155,18 @@ class Draw:
         return img
 
     @staticmethod
-    def draw_road_segments(img: Img, segments: list[Driveable | Passable | Impassable]) -> Img:
+    def draw_road_segments(img: MatLike, segments: list[Driveable | Passable | Impassable]) -> MatLike:
+        """
+        Draw the road segments on the image.
+
+        Args:
+            img (MatLike): The image to draw on.
+            segments (list[Driveable | Passable | Impassable]): The road segments to draw.
+
+        Returns:
+            MatLike: The image with the road segments drawn on it.
+        """
+
         alpha = 0.4
         colormap: dict[type, tuple[int, int, int]] = {
             Driveable: (0, 255, 255),
@@ -132,13 +174,13 @@ class Draw:
             Impassable: (0, 0, 255),
         }
 
-        overlay: Img = img.copy()
+        overlay: MatLike = img.copy()
 
         # draw the driveable first
         for segment in segments:
             if isinstance(segment, Driveable):
                 # take the cropping into account
-                pts: NDArray[uint8] = segment.pts.copy()
+                pts: NumPyArrayNumeric = segment.pts.copy()
                 pts[:, 0, 1] += globals.ROADSEGMENT_EXTRACTION_CROP_TOP
 
                 cv2.fillPoly(img=overlay, pts=[pts], color=colormap[type(segment)])
@@ -146,7 +188,7 @@ class Draw:
         for segment in segments:
             if not isinstance(segment, Driveable):
                 # take the cropping into account
-                pts: NDArray[uint8] = segment.pts.copy()
+                pts: NumPyArrayNumeric = segment.pts.copy()
                 pts[:, 0, 1] += globals.ROADSEGMENT_EXTRACTION_CROP_TOP
 
                 cv2.fillPoly(img=overlay, pts=[pts], color=colormap[type(segment)])
@@ -156,7 +198,18 @@ class Draw:
         return img
 
     @staticmethod
-    def draw_paths(img: Img, paths: list[Path]) -> Img:
+    def draw_paths(img: MatLike, paths: list[Path]) -> MatLike:
+        """
+        Draw the paths on the image.
+
+        Args:
+            img (MatLike): The image to draw on.
+            paths (list[Path]): The paths to draw.
+
+        Returns:
+            MatLike: The image with the paths drawn on it.
+        """
+
         for path in paths:
             cv2.polylines(img=img, pts=[path.approx_pts], isClosed=False, color=(139, 0, 0), thickness=5)
 

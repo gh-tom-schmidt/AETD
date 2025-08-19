@@ -3,12 +3,10 @@
 # using a combination of detection and classification models.
 #
 
-from typing import Any, cast
+from typing import cast
 
 import cv2
-import numpy as np
-from numpy.typing import NDArray
-from torch import Tensor
+from cv2.typing import MatLike
 from ultralytics import YOLO  # pyright: ignore[reportMissingTypeStubs]
 from ultralytics.engine.results import Probs, Results  # pyright: ignore[reportMissingTypeStubs]
 
@@ -16,7 +14,6 @@ from configs import globals
 
 from .containers import RoadObjectsBox, Sign, TrafficLight, Vehicle
 from .preprocessor import Preprocessor
-from .types import Img, ImgT
 
 
 class RoadObjectExtractor:
@@ -34,7 +31,7 @@ class RoadObjectExtractor:
         self.detection_model: YOLO = YOLO(globals.DETECTION_MODEL_PATH)
         self.classification_model: YOLO = YOLO(globals.CLASSIFICATION_MODEL_PATH)
 
-    def process(self, img: Img) -> RoadObjectsBox | None:
+    def process(self, img: MatLike) -> RoadObjectsBox | None:
         """
         The processing pipeline for road object extraction.
 
@@ -46,14 +43,14 @@ class RoadObjectExtractor:
         self.road_objects_box: RoadObjectsBox = RoadObjectsBox()
 
         # always create a copy of the original image for safety
-        self.img: Img = img.copy()
+        self.img: MatLike = img.copy()
 
         # crop the image to remove the road advisor
         self.img = img[globals.ROADOBJECT_EXTRACTION_CROP_TOP :, :, :]
 
         # preprocess the image
         self.img = Preprocessor.process(img=self.img)
-        self.img = ImgT(img=cv2.cvtColor(src=self.img, code=cv2.COLOR_BGR2RGB))
+        self.img = cv2.cvtColor(src=self.img, code=cv2.COLOR_BGR2RGB)
 
         self.predictBoxes()
 
@@ -64,7 +61,6 @@ class RoadObjectExtractor:
         Predict road objects in the image (vehicles, signs, traffic lights).
         """
 
-        # make the predictions
         results: list[Results] = self.detection_model.predict(  # pyright: ignore[reportUnknownMemberType]
             source=self.img,
             device=globals.DETECTION_MODEL_DEVICES,
@@ -74,14 +70,17 @@ class RoadObjectExtractor:
             iou=0.45,
         )
 
+        # Numpy in generell imposes a dynamic typing system so pyright is complaining a lot
         for result in results:
-            # [x1, y1, x2, y2]
-            if result.boxes is None:
-                continue
-            xyxy: NDArray[np.uint8] = self.to_numpy_int(result.boxes.xyxy)  # pyright: ignore[reportUnknownArgumentType, reportUnknownMemberType]
-            class_ids: NDArray[np.uint8] = self.to_numpy_int(result.boxes.cls)  # pyright: ignore[reportUnknownArgumentType, reportUnknownMemberType]
+            # Enforce a list of tuples with the coordinated in it [x1, y1, x2, y2]
+            # where each value must be an integer, because coordinates are expected to be integers
+            xyxy: list[tuple[int, int, int, int]] = [
+                (int(x1), int(y1), int(x2), int(y2))  # type: ignore
+                for x1, y1, x2, y2 in result.boxes.xyxy.tolist()  # type: ignore
+            ]
+            class_ids = result.boxes.cls.int().tolist()  # type: ignore
 
-            for coords, cls in zip(xyxy, class_ids):
+            for coords, cls in zip(xyxy, class_ids):  # type: ignore
                 # 0: Sign
                 # 1: Traffic-Light
                 # 2: Vehicle
@@ -121,7 +120,7 @@ class RoadObjectExtractor:
         y1: int = coords[1]
         x2: int = coords[2]
         y2: int = coords[3]
-        cropped_img: Img = self.img[y1:y2, x1:x2]
+        cropped_img: MatLike = self.img[y1:y2, x1:x2]
 
         # make the prediction
         results: list[Results] = self.classification_model.predict(  # pyright: ignore[reportUnknownMemberType]
@@ -135,8 +134,3 @@ class RoadObjectExtractor:
             return cast(Probs, results[0].probs).top1
         else:
             return None
-
-    def to_numpy_int(self, x: Tensor | np.ndarray[Any, Any]) -> np.ndarray[Any, Any]:
-        if isinstance(x, Tensor):
-            return x.cpu().numpy().astype(int)  # pyright: ignore[reportUnknownVariableType, reportUnknownMemberType]
-        return np.asarray(x, dtype=int)

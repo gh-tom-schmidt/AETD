@@ -1,13 +1,14 @@
 from concurrent.futures import Future, ThreadPoolExecutor, as_completed
 from typing import cast
 
+from cv2.typing import MatLike
+
 from .containers import AnnotationsContainer, DirectionBox, PathsBox, RoadObjectsBox, RoadSegmentsBox, SpeedBox
 from .direction import DirectionExtractor
 from .paths import PathPlanner
 from .road_objects import RoadObjectExtractor
 from .road_segmentations import RoadSegmentsExtractor
 from .speed import SpeedDataExtractor
-from .types import Img
 
 Box = DirectionBox | SpeedBox | RoadObjectsBox | RoadSegmentsBox | PathsBox | None
 
@@ -26,12 +27,12 @@ class Pipeline:
         self.road_segments_extractor = RoadSegmentsExtractor()
         self.path_planner = PathPlanner()
 
-    def process(self, img: Img) -> AnnotationsContainer:
+    def process(self, img: MatLike) -> AnnotationsContainer:
         """
         Processes the input image through all extraction modules.
 
         Args:
-            img (Img): The input image to process.
+            img (MatLike): The input image to process.
 
         Returns:
             AnnotationsContainer: The container holding all extracted annotations.
