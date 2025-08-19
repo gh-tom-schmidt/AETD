@@ -20,7 +20,7 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install -r py_requirements.txt
+          pip install -r py_requierments.txt
 
       - name: Run unit + integration + functional tests
         run: pytest tests/unit tests/integration tests/functional
