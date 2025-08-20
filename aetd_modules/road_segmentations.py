@@ -9,10 +9,10 @@ import cv2
 import numpy as np
 from cv2.typing import MatLike
 from numpy.typing import NDArray
-from ultralytics import YOLO  # pyright: ignore[reportMissingTypeStubs]
 from ultralytics.engine.results import Results  # pyright: ignore[reportMissingTypeStubs]
 
 from configs import globals
+from models import SegmentationModel
 
 from .containers import Driveable, Impassable, Passable, Path, RoadSegmentsBox
 from .paths import PathExtractor
@@ -20,7 +20,7 @@ from .preprocessor import Preprocessor
 
 
 class RoadSegmentsExtractor:
-    def __init__(self) -> None:
+    def __init__(self, only_results: bool = False) -> None:
         """
         The RoadSegmentsExtractor class is responsible for extracting road segments from images.
 
@@ -32,79 +32,83 @@ class RoadSegmentsExtractor:
             - morph: Apply morphological operations to the mask.
             - findContours: Find contours in the given mask.
         """
+        self.segmentation_model: SegmentationModel | None = None
+        if only_results is False:
+            self.segmentation_model = SegmentationModel(
+                pretrained_model_path=globals.SEGMENTATION_MODEL_PATH,
+                device=globals.SEGMENTATION_MODEL_DEVICES,
+            )
 
-        self.seg_model_model = YOLO(model=globals.SEGMENTATION_MODEL_PATH)
-
-    def process(self, img: MatLike) -> RoadSegmentsBox | None:
+    def process(self, img: MatLike, result: Results | None = None) -> RoadSegmentsBox | None:
         """
         The processing pipeline for road segment extraction.
         """
 
         self.road_segments_box = RoadSegmentsBox()
 
-        # always create a copy of the original image for safety
-        self.img: MatLike = img.copy()
-        self.width: int = self.img.shape[1]
-        self.height: int = self.img.shape[0]
+        self.width: int = img.shape[1]
+        self.height: int = img.shape[0]
 
-        # crop the image to remove the road advisor
-        self.img = img[globals.ROADSEGMENT_EXTRACTION_CROP_TOP :, :, :]
+        # if there is already a result, we can use it
+        if result is not None:
+            self.segmenting(result=result)
 
-        # preprocess the image
-        self.img = Preprocessor.process(img=self.img)
-        self.img = cv2.cvtColor(src=self.img, code=cv2.COLOR_BGR2RGB)
+        # if there is a segmentation model but no result, we need to run the model
+        elif self.segmentation_model is not None and result is None:
+            # always create a copy of the original image for safety
+            self.img: MatLike = img.copy()
 
-        self.segmenting()
+            # crop the image to remove the road advisor
+            self.img = img[globals.ROADSEGMENT_EXTRACTION_CROP_TOP :, :, :]
+
+            # preprocess the image
+            self.img = Preprocessor.process(img=self.img)
+            self.img = cv2.cvtColor(src=self.img, code=cv2.COLOR_BGR2RGB)
+
+            result = self.segmentation_model.predict(img=self.img)
+            self.segmenting(result=result)
+
+        else:
+            raise ValueError("Unknown state")
 
         return self.road_segments_box
 
-    def segmenting(self) -> None:
+    def segmenting(self, result: Results) -> None:
         """
         Segment the road into different classes and clean each segment.
         """
 
-        # make the predictions
-        results: list[Results] = self.seg_model_model.predict(  # pyright: ignore[reportUnknownMemberType]
-            source=self.img,
-            device=globals.SEGMENTATION_MODEL_DEVICES,
-            batch=1,
-            verbose=False,
-            iou=0.45,
-            conf=0.6,
-        )
-
         # Numpy in generell imposes a dynamic typing system so pyright is complaining a lot
-        for result in results:
-            polygons = result.masks.xy  # type: ignore
-            class_ids = result.boxes.cls.int().tolist()  # type: ignore
+        polygons = result.masks.xy  # type: ignore
+        class_ids = result.boxes.cls.int().tolist()  # type: ignore
 
-            for poly, cls in zip(polygons, class_ids):  # type: ignore
-                # reshape the ouput to an opencv format
-                pts: NDArray[np.int32] = poly.astype(np.int32).reshape((-1, 1, 2))
+        for poly, cls in zip(polygons, class_ids):  # type: ignore
+            # reshape the ouput to an opencv format
+            pts: NDArray[np.int32] = poly.astype(np.int32).reshape((-1, 1, 2))
 
-                # get the cleaned driveable area
-                cnt: NDArray[np.int32] | None = self.findContours(mask=self.morph(mask=self.mask(pts=pts)))
+            # get the cleaned driveable area
+            cnt: NDArray[np.int32] | None = self.findContours(mask=self.morph(mask=self.mask(pts=pts)))
 
-                # create a approximation
-                if cnt is None:
-                    continue
-                path: Path | None = PathExtractor.calculate_path_from_pts(
-                    pts=cnt.squeeze(1), width=self.width, height=self.height
-                )
+            # create a approximation
+            if cnt is None:
+                continue
+            path: Path | None = PathExtractor.calculate_path_from_pts(
+                pts=cnt.squeeze(1), width=self.width, height=self.height
+            )
 
-                # 0: Driveable
-                # 1: Passable
-                # 2: Impassable
+            # 0: Driveable
+            # 1: Passable
+            # 2: Impassable
 
-                if path is not None:
-                    if cls == 0:
-                        self.road_segments_box.add(road_segment=Driveable(pts=cnt, path=path))
-                    elif cls == 1:
-                        self.road_segments_box.add(road_segment=Passable(pts=cnt, path=path))
-                    elif cls == 2:
-                        self.road_segments_box.add(road_segment=Impassable(pts=cnt, path=path))
-                    else:
-                        raise ValueError(f"Unknown class ID: {cls}")
+            if path is not None:
+                if cls == 0:
+                    self.road_segments_box.add(road_segment=Driveable(pts=cnt, path=path))
+                elif cls == 1:
+                    self.road_segments_box.add(road_segment=Passable(pts=cnt, path=path))
+                elif cls == 2:
+                    self.road_segments_box.add(road_segment=Impassable(pts=cnt, path=path))
+                else:
+                    raise ValueError(f"Unknown class ID: {cls}")
 
     def mask(self, pts: NDArray[np.int32]) -> MatLike:
         """

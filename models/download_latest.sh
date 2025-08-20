@@ -18,8 +18,8 @@ for url in "${urls[@]}"; do
     # Unzip
     unzip "$zipfile"
 
-    # Move .pt file to models/
-    mv "$filename/$filename.pt" "models/"
+    # Move .pt file to models/pretrained/
+    mv "$filename/$filename.pt" "models/pretrained/"
 
     # Cleanup
     rm -rf "$zipfile" "$filename"
