@@ -2,7 +2,6 @@
 from PySide6.QtCore import QFile, Qt
 from PySide6.QtGui import QCloseEvent
 from PySide6.QtWidgets import (
-    QFileDialog,
     QMainWindow,
     QPushButton,
     QSplitter,
@@ -12,7 +11,8 @@ from PySide6.QtWidgets import (
 
 from configs import globals
 
-from ..components import ImageViewer, ModuleTabBar
+from ..components import ImageViewer, InfoTable, ModuleTabBar
+from .premain_layout import PreloadLayout
 
 
 class MainWindow(QMainWindow):
@@ -27,10 +27,14 @@ class MainWindow(QMainWindow):
         self.central_widget = QWidget()
         self.main_layout = QVBoxLayout()
 
+        # create the premain layout
+        self.premain_layout = PreloadLayout()
+        self.main_layout.addWidget(self.premain_layout)
+
         # File selector
-        self.open_button = QPushButton(text="Open Image")
+        self.open_button = QPushButton(text="Open")
         self.open_button.setFixedSize(150, 40)
-        self.open_button.clicked.connect(slot=self.selectAndBuild)
+        self.open_button.clicked.connect(slot=self.build)
         self.main_layout.addWidget(self.open_button, alignment=Qt.AlignmentFlag.AlignCenter)
 
         # add the layout to the central widget
@@ -51,29 +55,38 @@ class MainWindow(QMainWindow):
         """
         event.accept()
 
-    def selectAndBuild(self) -> None:
+    def build(self) -> None:
         """
-        Opens a file dialog to select a image file and loads the main layout.
+        Load the main layout.
         """
 
-        file_path: str = QFileDialog.getOpenFileName(
-            parent=self,
-            caption="Select Image File",
-            dir=globals.BASE_DIR,
-            filter="Image Files (*.png *.jpg *.jpeg *.bmp *.gif);;All Files (*)",
-        )[0]
+        # set the globals
+        self.premain_layout.setGlobals()
 
         # remove the open button from the layout
         self.main_layout.removeWidget(self.open_button)
         self.open_button.setParent(None)
         self.open_button.deleteLater()
 
+        # remove the premain layout
+        self.main_layout.removeWidget(self.premain_layout)
+        self.premain_layout.setParent(None)
+        self.premain_layout.deleteLater()
+
         # ------------ Vertical Split screen ------------------
         splitter = QSplitter(Qt.Orientation.Horizontal)
 
-        # left widget
-        self.image_viewer = ImageViewer(img_path=file_path)
-        splitter.addWidget(self.image_viewer)
+        left_vertical_splitter = QSplitter(Qt.Orientation.Vertical)
+
+        # left vertical splitter upper widget
+        self.image_viewer = ImageViewer()
+        left_vertical_splitter.addWidget(self.image_viewer)
+
+        # left vertical splitter lower widget
+        self.info_table = InfoTable()
+        left_vertical_splitter.addWidget(self.info_table)
+
+        splitter.addWidget(left_vertical_splitter)
 
         # right widget
         self.tab_bar = ModuleTabBar(parent=self)
@@ -87,6 +100,7 @@ class MainWindow(QMainWindow):
 
         self.image_viewer.emit_annotation_container()
 
-        # Caution: the size of the spliter should be set when the
+        # Caution: the size of the splitter should be set when the
         # layout is built otherwise it will not work correctly
         splitter.setSizes([self.width() * 2 // 3, self.width() // 3])
+        left_vertical_splitter.setSizes([self.height() * 2 // 3, self.height() // 3])

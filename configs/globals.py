@@ -2,6 +2,7 @@
 
 APP_TITLE: str = 'Debug Viewer for AETD'
 BASE_DIR: str = 'debug/data/tests/Samples'
+DEFAULT_IMG: str = 'debug/data/tests/Samples/ETS2_60-FPS_2025-08-09_19-51-39_trimmed_Frame-1.jpg'
 DIRECTION_EXTRACTION_CROP_TOP: int = 28
 DIRECTION_EXTRACTION_CROP_BOTTOM: int = 900
 DIRECTION_EXTRACTION_CROP_LEFT: int = 810
@@ -31,3 +32,6 @@ ROADSEGMENT_EXTRACTION_MIN_LENGTH_DRIVEABLE: int = 1000
 PREPROCESSING_SHARPEN_AMOUNT: float = 1.5
 PREPROCESSING_GAMMA_MAX: float = 1.5
 PREPROCESSING_CLAHE_THRESHOLD: int = 50
+SEG_RESULTS: str = 'models/precalculated/seg_results.pkl'
+DET_RESULTS: str = 'models/precalculated/det_results.pkl'
+CLS_RESULTS: str = 'models/precalculated/cls_results.pkl'

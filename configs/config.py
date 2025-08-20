@@ -1,4 +1,6 @@
 from __future__ import annotations
+
+import builtins
 from configparser import ConfigParser
 
 
@@ -27,6 +29,9 @@ class Config:
                 type_hint = self._get_type_hint(value)
                 f.write(f"{key}: {type_hint} = {repr(value)}\n")
 
+        # inject into global namespace so they’re usable immediately
+        self._inject_globals(data)
+
     @staticmethod
     def _convert_value(value: str) -> str | int | float | bool:
         """Try to convert the string value to int, float, or bool."""
@@ -52,3 +57,15 @@ class Config:
         if isinstance(value, float):
             return "float"
         return "str"
+
+    @staticmethod
+    def _inject_globals(data: dict[str, str | int | float | bool]) -> None:
+        """
+        Inject the config values into the global scope.
+        Attaches them to builtins so they're available everywhere.
+
+        Args:
+            data (dict[str, str | int | float | bool]): The config data to inject.
+        """
+        for key, value in data.items():
+            setattr(builtins, key, value)
