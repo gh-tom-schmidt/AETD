@@ -1,7 +1,15 @@
 from PySide6.QtWidgets import QHBoxLayout, QTabWidget, QWidget
 
 from .module_tab import ModulTab
-from .tabs import DirectionsTab, FullAnnotationTab, PathTab, RoadObjectTab, SegmentorTab, SpeedTab
+from .tabs import (
+    DirectionsTab,
+    FullAnnotationTab,
+    PathTab,
+    RoadObjectClassificationTab,
+    RoadObjectDetectionTab,
+    SegmentorTab,
+    SpeedTab,
+)
 
 
 class ModuleTabBar(QWidget):
@@ -27,8 +35,12 @@ class ModuleTabBar(QWidget):
         self.tab_widget.addTab(tab, "Speed Data Extractor")
         self.tabs.append(tab)
 
-        tab = RoadObjectTab()
+        tab = RoadObjectDetectionTab()
         self.tab_widget.addTab(tab, "Road Object Detector")
+        self.tabs.append(tab)
+
+        tab = RoadObjectClassificationTab()
+        self.tab_widget.addTab(tab, "Road Object Classifier")
         self.tabs.append(tab)
 
         tab = SegmentorTab()

@@ -35,3 +35,4 @@ PREPROCESSING_CLAHE_THRESHOLD: int = 50
 SEG_RESULTS: str = 'models/precalculated/seg_results.pkl'
 DET_RESULTS: str = 'models/precalculated/det_results.pkl'
 CLS_RESULTS: str = 'models/precalculated/cls_results.pkl'
+HEIGHT_REDUCTION_FACTOR: int = 2

@@ -1,83 +1,73 @@
+from abc import abstractmethod
+
 from cv2.typing import MatLike
 from PySide6.QtCore import Signal, Slot  # pyright: ignore[reportUnknownVariableType]
-from PySide6.QtWidgets import QHBoxLayout, QPushButton, QVBoxLayout, QWidget
-
-from aetd_modules import (
-    AnnotationsContainer,
-    DirectionBox,
-    DirectionExtractor,
-    PathPlanner,
-    PathsBox,
-    Pipeline,
-    RoadObjectExtractor,
-    RoadObjectsBox,
-    RoadSegmentsBox,
-    RoadSegmentsExtractor,
-    SpeedBox,
-    SpeedDataExtractor,
+from PySide6.QtWidgets import (
+    QHBoxLayout,
+    QHeaderView,
+    QPushButton,
+    QTableWidget,
+    QTableWidgetItem,
+    QVBoxLayout,
+    QWidget,
 )
 
-Box = DirectionBox | SpeedBox | RoadObjectsBox | RoadSegmentsBox | PathsBox | None
-Extractors = (
-    DirectionExtractor
-    | SpeedDataExtractor
-    | RoadObjectExtractor
-    | RoadSegmentsExtractor
-    | PathPlanner
-    | Pipeline
-    | None
-)
+from aetd_modules import AnnotationsContainer
 
 
 class ModulTab(QWidget):
     # emit the results
     result_ready = Signal(AnnotationsContainer)
 
-    def __init__(self, parent: QWidget | None = None) -> None:
+    def __init__(self, parent: QWidget | None = None, table_data: list[tuple[str, str]] | None = None) -> None:
         super().__init__(parent)
         self.img: MatLike | None = None
-        self.modul: Extractors | None = None
 
-        # ---------------- LAYOUT ------------------------
+        # ---------------------- LAYOUT ------------------------
         main_layout = QVBoxLayout(self)
 
-        # top row
-        top_layout = QHBoxLayout()
-        self.run_button = QPushButton(text="Run")
-        self.run_button.clicked.connect(slot=self.process)
-        top_layout.addWidget(self.run_button)
-        # pushes everything else to the right
-        top_layout.addStretch()
+        # ---------------------- Table -------------------------
 
-        main_layout.addLayout(top_layout)
+        # if there is table data, create a table
+        if table_data is not None:
+            # set the basic tabel
+            self.info_table = QTableWidget(len(table_data), 2)
+            self.info_table.setHorizontalHeaderLabels(["Name", "Value"])
+            self.info_table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
+            self.info_table.verticalHeader().setVisible(False)
+
+            # fill the table from the list
+            for row_index, (name, value) in enumerate(table_data):
+                self.info_table.setItem(row_index, 0, QTableWidgetItem(name))
+                self.info_table.setItem(row_index, 1, QTableWidgetItem(value))
+
+            # hook the table into the layout
+            main_layout.addWidget(self.info_table)
+
+        # ------------------- Run Button ---------------------
+        self.run_button = QPushButton(text="Run")
+        self.run_button.setFixedHeight(40)  # give it some height
+        self.run_button.clicked.connect(
+            lambda checked=False: self.process(annotations_container=self.annotations_container)
+        )
+
+        # make button full width
+        bottom_layout = QHBoxLayout()
+        bottom_layout.addWidget(self.run_button)
+
+        main_layout.addStretch()  # keeps button at bottom
+        main_layout.addLayout(bottom_layout)
+
         self.setLayout(main_layout)
 
+    # get the annotation container from viewer
     @Slot(AnnotationsContainer)
     def receive_annotation_container(self, annotations_container: AnnotationsContainer) -> None:
         self.annotations_container: AnnotationsContainer = annotations_container
 
-    def process(self) -> None:
-        if self.modul is not None:
-            if isinstance(self.modul, PathPlanner):
-                # path planner needs the segments
-                if self.annotations_container.road_segments is not None:
-                    self.annotations_container.paths = self.modul.process(
-                        road_segment_box=self.annotations_container.road_segments,
-                        width=self.annotations_container.original_img.shape[1],
-                        height=self.annotations_container.original_img.shape[0],
-                    )
-            else:
-                result: Box | AnnotationsContainer = self.modul.process(self.annotations_container.original_img)
-
-                if isinstance(result, DirectionBox):
-                    self.annotations_container.direction = result
-                elif isinstance(result, SpeedBox):
-                    self.annotations_container.speed = result
-                elif isinstance(result, RoadObjectsBox):
-                    self.annotations_container.road_objects = result
-                elif isinstance(result, RoadSegmentsBox):
-                    self.annotations_container.road_segments = result
-                elif isinstance(result, AnnotationsContainer):
-                    self.annotations_container = result
-
-        self.result_ready.emit(self.annotations_container)
+    @abstractmethod
+    def process(self, annotations_container: AnnotationsContainer) -> None:
+        """
+        Default implementation (can be overridden).
+        """
+        pass

@@ -31,7 +31,11 @@ class SpeedDataExtractor:
         """
 
         self.speed: int | None = None
-        self.reader: easyocr.Reader = easyocr.Reader(lang_list=["en"], gpu=globals.SPEED_EXTRACTION_EASYOCR_DEVICES)
+        self.reader: easyocr.Reader = easyocr.Reader(
+            lang_list=["en"],
+            gpu=globals.SPEED_EXTRACTION_EASYOCR_DEVICES,
+            verbose=False,
+        )
 
     def process(self, img: MatLike) -> SpeedBox | None:
         """

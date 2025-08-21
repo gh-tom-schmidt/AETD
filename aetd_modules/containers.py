@@ -8,7 +8,7 @@ from numpy.typing import NDArray
 
 
 class AnnotationsContainer:
-    def __init__(self, img: MatLike) -> None:
+    def __init__(self, img: MatLike, img_name: str) -> None:
         """
         The AnnotationsContainer class holds various data attributes related to the image processing pipeline.
 
@@ -26,6 +26,7 @@ class AnnotationsContainer:
         """
 
         self.original_img: MatLike = img
+        self.original_img_name: str = img_name
         # on initialization the original and annotated images are the same
         self.annotated_img: MatLike = img.copy()
 

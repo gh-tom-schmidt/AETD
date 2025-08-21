@@ -8,6 +8,8 @@ import math
 import numpy as np
 from numpy.typing import NDArray
 
+from configs import globals
+
 from .containers import Impassable, Passable, Path, PathsBox, RoadSegmentsBox
 
 
@@ -45,16 +47,18 @@ class PathPlanner:
             if isinstance(segment, Impassable) or isinstance(segment, Passable):
                 self.lanes.append(segment)
 
-        # check if there is at least one lane
+        # check if there is at least two lane
         # otherwise return None for now
         # TODO: implement the "OneLane" Logic
-        if len(self.lanes) >= 1:
+        if len(self.lanes) < 2:
             return None
 
         # strip unreachable lanes
         self.strip_unreachable(distances=self.get_distances())
         # sorte the lanes by there distance to the center
         self.lanes = sorted(self.lanes, key=lambda lane: self.dst(lane=lane))
+        # calculate paths between lanes
+        self.calculate_paths()
 
         return self.path_box
 
@@ -125,7 +129,7 @@ class PathPlanner:
         """
 
         for i in range(len(self.lanes) - 1):
-            # calculate a center function between to lanes
+            # calculate the center function
             f: np.poly1d = (self.lanes[i].path.f + self.lanes[i + 1].path.f) / 2
             # create a new path and add it to the path box
             path: Path | None = PathExtractor().calculate_path_from_function(
@@ -174,18 +178,26 @@ class PathExtractor:
             Path: The calculated path.
         """
 
+        min_height: int = height // globals.HEIGHT_REDUCTION_FACTOR
+
         # generate approximated points for y in [0, height]
-        approx_y: NDArray[np.int32] = np.linspace(start=0, stop=height, num=height + 1, dtype=np.int32)
+        approx_y: NDArray[np.int32] = np.linspace(
+            # take the offset into account
+            start=min_height,
+            stop=height,
+            num=height + 1,
+            dtype=np.int32,
+        )
         approx_x: NDArray[np.int32] = f(approx_y)
 
         # create mask for points within bounds
-        mask = (approx_x >= 0) & (approx_x <= width) & (approx_y >= 0) & (approx_y <= height)
+        mask = (approx_x >= 0) & (approx_x <= width) & (approx_y >= min_height) & (approx_y <= height)
 
         approx_x = approx_x[mask]
         approx_y = approx_y[mask]
 
         # create points (x, y)
-        approx_pts: NDArray[np.int32] = np.stack(arrays=[approx_x, approx_y], axis=1)
+        approx_pts: NDArray[np.int32] = np.stack(arrays=[approx_x, approx_y], axis=1).astype(np.int32)
 
         # it can be that the function we made with np.polyfit has no valid points in the given image
         # and therefore there is no valid path

@@ -18,14 +18,16 @@ from .draw import Draw
 from .paths import PathExtractor, PathPlanner
 from .pipeline import Pipeline
 from .preprocessor import Preprocessor
-from .road_objects import RoadObjectExtractor
+from .road_object_classification import RoadObjectClassificationRefiner
+from .road_objects_detection import RoadObjectDetectionExtractor
 from .road_segmentations import RoadSegmentsExtractor
 from .speed import SpeedDataExtractor
 
 __all__: list[str] = [
     "DirectionExtractor",
     "SpeedDataExtractor",
-    "RoadObjectExtractor",
+    "RoadObjectDetectionExtractor",
+    "RoadObjectClassificationRefiner",
     "Vehicle",
     "Sign",
     "TrafficLight",

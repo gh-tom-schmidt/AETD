@@ -106,14 +106,14 @@ class PreloadLayout(QWidget):
         if self.file_checkboxes["seg_result"].isChecked():
             globals.SEG_RESULTS = self.file_labels["seg_result"].text()
         else:
-            globals.SEG_RESULTS = None
+            globals.SEG_RESULTS = False
 
         if self.file_checkboxes["det_result"].isChecked():
             globals.DET_RESULTS = self.file_labels["det_result"].text()
         else:
-            globals.DET_RESULTS = None
+            globals.DET_RESULTS = False
 
         if self.file_checkboxes["cls_result"].isChecked():
             globals.CLS_RESULTS = self.file_labels["cls_result"].text()
         else:
-            globals.CLS_RESULTS = None
+            globals.CLS_RESULTS = False

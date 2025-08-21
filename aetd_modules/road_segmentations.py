@@ -20,7 +20,7 @@ from .preprocessor import Preprocessor
 
 
 class RoadSegmentsExtractor:
-    def __init__(self, only_results: bool = False) -> None:
+    def __init__(self, only_results: str | bool = False) -> None:
         """
         The RoadSegmentsExtractor class is responsible for extracting road segments from images.
 
@@ -39,6 +39,14 @@ class RoadSegmentsExtractor:
                 device=globals.SEGMENTATION_MODEL_DEVICES,
             )
 
+    def model_loaded(self) -> bool:
+        """
+        Return True if the segmentation model is loaded, False otherwise.
+        """
+        if self.segmentation_model is not None:
+            return True
+        return False
+
     def process(self, img: MatLike, result: Results | None = None) -> RoadSegmentsBox | None:
         """
         The processing pipeline for road segment extraction.
@@ -51,6 +59,7 @@ class RoadSegmentsExtractor:
 
         # if there is already a result, we can use it
         if result is not None:
+            self.img = img
             self.segmenting(result=result)
 
         # if there is a segmentation model but no result, we need to run the model

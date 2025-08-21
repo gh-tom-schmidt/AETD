@@ -1,3 +1,5 @@
+import os
+
 import cv2
 from cv2.typing import MatLike, NumPyArrayNumeric
 from PySide6.QtCore import Qt, Signal, Slot  # pyright: ignore[reportUnknownVariableType]
@@ -21,7 +23,8 @@ class ImageViewer(QLabel):
         # load the given global image path
         img: cv2.Mat | NumPyArrayNumeric | None = cv2.imread(filename=globals.DEFAULT_IMG, flags=cv2.IMREAD_COLOR)
         if img is not None:
-            self.annotations_container: AnnotationsContainer = AnnotationsContainer(img=img)
+            basename = os.path.basename(globals.DEFAULT_IMG)
+            self.annotations_container: AnnotationsContainer = AnnotationsContainer(img=img, img_name=basename)
         else:
             raise ValueError(f"Image at {globals.DEFAULT_IMG} could not be loaded.")
 
