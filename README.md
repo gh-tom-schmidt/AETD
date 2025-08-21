@@ -30,6 +30,12 @@ This is where **AETD** begins—an AI trucker with one simple, purposeful missio
 
 ---
 
+<p align="center">
+  <a href="docs/images/premain_screen.png"><img src="docs/images/premain_screen.png" width="33%"/></a>
+  <a href="docs/images/main_screen_unannotated.png"><img src="docs/images/main_screen_unannotated.png" width="33%"/></a>
+  <a href="docs/images/main_screen_annotated.png"><img src="docs/images/main_screen_annotated.png" width="33%"/></a>
+</p>
+
 ## ⚠️ Disclaimer
 
 This project is **heavily under construction** and currently in **alpha state**.

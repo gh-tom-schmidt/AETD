@@ -167,33 +167,41 @@ class Draw:
             MatLike: The image with the road segments drawn on it.
         """
 
-        alpha = 0.4
+        alpha = 0.3
         colormap: dict[type, tuple[int, int, int]] = {
             Driveable: (0, 255, 255),
             Passable: (0, 255, 0),
             Impassable: (0, 0, 255),
         }
 
-        overlay: MatLike = img.copy()
+        pts_overlay: MatLike = img.copy()
+        approx_pts_overlay: MatLike = img.copy()
 
         # draw the driveable first
         for segment in segments:
             if isinstance(segment, Driveable):
                 # take the cropping into account
-                pts: NumPyArrayNumeric = segment.pts.copy()
-                pts[:, 0, 1] += globals.ROADSEGMENT_EXTRACTION_CROP_TOP
+                pts: NumPyArrayNumeric = segment.pts.copy().squeeze(1)
+                pts[:, 1] += globals.ROADSEGMENT_EXTRACTION_CROP_TOP
 
-                cv2.fillPoly(img=overlay, pts=[pts], color=colormap[type(segment)])
+                cv2.fillPoly(img=pts_overlay, pts=[pts], color=colormap[type(segment)])
 
         for segment in segments:
             if not isinstance(segment, Driveable):
-                # take the cropping into account
-                pts: NumPyArrayNumeric = segment.pts.copy()
-                pts[:, 0, 1] += globals.ROADSEGMENT_EXTRACTION_CROP_TOP
+                pts: NumPyArrayNumeric = segment.pts.copy().squeeze(1)
+                pts[:, 1] += globals.ROADSEGMENT_EXTRACTION_CROP_TOP
 
-                cv2.fillPoly(img=overlay, pts=[pts], color=colormap[type(segment)])
+                approx_pts: NumPyArrayNumeric = segment.path.approx_pts.copy()
+                approx_pts[:, 1] += globals.ROADSEGMENT_EXTRACTION_CROP_TOP
 
-        cv2.addWeighted(src1=overlay, alpha=alpha, src2=img, beta=1 - alpha, gamma=0, dst=img)
+                cv2.fillPoly(img=pts_overlay, pts=[pts], color=colormap[type(segment)])
+                cv2.polylines(
+                    img=approx_pts_overlay, pts=[approx_pts], isClosed=False, color=colormap[type(segment)], thickness=5
+                )
+
+        # draw the predicted points lighter than the approximated pts
+        img = cv2.addWeighted(approx_pts_overlay, 1, img, 0, 0)
+        img = cv2.addWeighted(pts_overlay, alpha, img, 1 - alpha, 0)
 
         return img
 
@@ -211,6 +219,8 @@ class Draw:
         """
 
         for path in paths:
-            cv2.polylines(img=img, pts=[path.approx_pts], isClosed=False, color=(139, 0, 0), thickness=5)
+            approx_pts: NumPyArrayNumeric = path.approx_pts.copy()
+            approx_pts[:, 1] += globals.ROADSEGMENT_EXTRACTION_CROP_TOP
+            cv2.polylines(img=img, pts=[approx_pts], isClosed=False, color=(139, 0, 0), thickness=5)
 
         return img
