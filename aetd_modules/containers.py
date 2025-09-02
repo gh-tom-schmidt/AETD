@@ -36,6 +36,20 @@ class AnnotationsContainer:
         self.road_segments: RoadSegmentsBox | None = None
         self.paths: PathsBox | None = None
 
+    def __str__(self) -> str:
+        """
+        Returns a string representation of the AnnotationsContainer.
+        """
+
+        return (
+            f"AnnotationsContainer({self.original_img_name}):\n"
+            f"  Speed: {self.speed}\n"
+            f"  Direction: {self.direction}\n"
+            f"  Road Objects: {self.road_objects}\n"
+            f"  Road Segments: {self.road_segments}\n"
+            f"  Paths: {self.paths}"
+        )
+
 
 class SpeedBox(int):
     """

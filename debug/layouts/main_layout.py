@@ -11,7 +11,7 @@ from PySide6.QtWidgets import (
 
 from configs import globals
 
-from ..components import ImageViewer, InfoTable, ModuleTabBar
+from ..components import InfoTable, ModuleTabBar, ViewTabBar
 from .premain_layout import PreloadLayout
 
 
@@ -76,29 +76,24 @@ class MainWindow(QMainWindow):
         # ------------ Vertical Split screen ------------------
         splitter = QSplitter(Qt.Orientation.Horizontal)
 
+        # right widget
+        self.module_tab_bar = ModuleTabBar(parent=self)
+
+        # left widget
         left_vertical_splitter = QSplitter(Qt.Orientation.Vertical)
 
         # left vertical splitter upper widget
-        self.image_viewer = ImageViewer()
-        left_vertical_splitter.addWidget(self.image_viewer)
+        self.view_tab_bar = ViewTabBar(module_tab_bar=self.module_tab_bar)
+        left_vertical_splitter.addWidget(self.view_tab_bar)
 
         # left vertical splitter lower widget
         self.info_table = InfoTable()
         left_vertical_splitter.addWidget(self.info_table)
 
+        # add the splitter to the main layout
         splitter.addWidget(left_vertical_splitter)
-
-        # right widget
-        self.tab_bar = ModuleTabBar(parent=self)
-        splitter.addWidget(self.tab_bar)
+        splitter.addWidget(self.module_tab_bar)
         self.main_layout.addWidget(splitter)
-
-        # connect tabs from the tabbar and the image viewer
-        for tab in self.tab_bar.tabs:
-            self.image_viewer.image_ready.connect(slot=tab.receive_annotation_container)
-            tab.result_ready.connect(slot=self.image_viewer.update_container)
-
-        self.image_viewer.emit_annotation_container()
 
         # Caution: the size of the splitter should be set when the
         # layout is built otherwise it will not work correctly

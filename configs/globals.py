@@ -3,6 +3,7 @@
 APP_TITLE: str = 'Debug Viewer for AETD'
 BASE_DIR: str = 'debug/data/tests/Samples'
 DEFAULT_IMG: str = 'debug/data/tests/Samples/ETS2_60-FPS_2025-08-09_19-51-39_trimmed_Frame-1.jpg'
+DEFAULT_VIDEO: str = 'debug/data/tests/ETS2_60-FPS_2025-08-09_19-51-39_trimmed.mp4'
 DIRECTION_EXTRACTION_CROP_TOP: int = 28
 DIRECTION_EXTRACTION_CROP_BOTTOM: int = 900
 DIRECTION_EXTRACTION_CROP_LEFT: int = 810
