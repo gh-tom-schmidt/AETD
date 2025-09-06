@@ -51,7 +51,6 @@ class ModuleTabBar(QTabWidget):
             annotations_container = tab.process(
                 annotations_container=annotations_container, to_none=not tab.check_box.isChecked()
             )
-        print(annotations_container)
         return annotations_container
 
 

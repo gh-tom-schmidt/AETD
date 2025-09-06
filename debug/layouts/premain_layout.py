@@ -46,8 +46,8 @@ class PreloadLayout(QWidget):
         self.file_checkboxes: dict[str, QCheckBox] = {}
 
         # Create buttons and labels
-        self.add_file_selector("Select Image", "image", "Images (*.jpg *.jpeg)")
-        self.add_file_selector("Select Video", "video", "Videos (*.mp4 *.avi)")
+        self.add_file_selector("Select Image", "image", "Images (*.jpg *.jpeg)", with_checkbox=True)
+        self.add_file_selector("Select Video", "video", "Videos (*.mp4 *.avi)", with_checkbox=True)
         self.add_file_selector("Select Segmentation Model", "seg_model", "PyTorch Models (*.pt)")
         self.add_file_selector("Select Detection Model", "det_model", "PyTorch Models (*.pt)")
         self.add_file_selector("Select Classification Model", "cls_model", "PyTorch Models (*.pt)")
@@ -99,8 +99,6 @@ class PreloadLayout(QWidget):
         Write selected file paths back into global constants.
         """
 
-        globals.DEFAULT_IMG = self.file_labels["image"].text()
-        globals.DEFAULT_VIDEO = self.file_labels["video"].text()
         globals.SEGMENTATION_MODEL_PATH = self.file_labels["seg_model"].text()
         globals.DETECTION_MODEL_PATH = self.file_labels["det_model"].text()
         globals.CLASSIFICATION_MODEL_PATH = self.file_labels["cls_model"].text()
@@ -120,3 +118,13 @@ class PreloadLayout(QWidget):
             globals.CLS_RESULTS = self.file_labels["cls_result"].text()
         else:
             globals.CLS_RESULTS = False
+
+        if self.file_checkboxes["image"].isChecked():
+            globals.DEFAULT_IMG = self.file_labels["image"].text()
+        else:
+            globals.DEFAULT_IMG = False
+
+        if self.file_checkboxes["video"].isChecked():
+            globals.DEFAULT_VIDEO = self.file_labels["video"].text()
+        else:
+            globals.DEFAULT_VIDEO = False

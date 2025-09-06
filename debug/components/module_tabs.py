@@ -182,7 +182,7 @@ class RoadObjectClassificationTab(ModulTab):
                             road_object_box=annotations_container.road_objects,
                             cls_result=cls,
                         )
-                    break
+                        break
             elif annotations_container.road_objects is not None:
                 annotations_container.road_objects = self.modul.process(
                     img=annotations_container.original_img,
@@ -225,7 +225,7 @@ class SegmentorTab(ModulTab):
                         annotations_container.road_segments = self.modul.process(
                             img=annotations_container.original_img, result=seg
                         )
-                    break
+                        break
             else:
                 annotations_container.road_segments = self.modul.process(img=annotations_container.original_img)
 

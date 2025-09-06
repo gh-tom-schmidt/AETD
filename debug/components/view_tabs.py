@@ -81,7 +81,7 @@ class ImageViewerTab(QWidget):
         # Main layout
         layout = QVBoxLayout()
         layout.addLayout(top_bar)
-        layout.addWidget(self.view)
+        layout.addWidget(self.view, 1)
         self.setLayout(layout)
 
         # load the given global image path if the image path is not none
@@ -112,7 +112,7 @@ class VideoViewerTab(QWidget):
 
         # ----------------- LOAD VIDEO ----------------------
         # load the given global video path
-        if globals.DEFAULT_VIDEO != "":
+        if globals.DEFAULT_VIDEO:
             self.cap = cv2.VideoCapture(globals.DEFAULT_VIDEO)
             if self.cap.isOpened():
                 self.next_frame()
@@ -123,13 +123,13 @@ class VideoViewerTab(QWidget):
 
         # ------------------- LAYOUT ------------------------
         layout = QVBoxLayout()
-        layout.addWidget(self.view)
+        layout.addWidget(self.view, 1)
 
         # ------------------- SLIDER ------------------------
         self.slider = QSlider(Qt.Orientation.Horizontal)
         self.slider.setRange(0, 100)
         self.slider.setValue(0)
-        layout.addWidget(self.slider)
+        layout.addWidget(self.slider, 0)
 
         # ---------------- BUTTON LAYOUT --------------------
         controlls = QHBoxLayout()
@@ -155,15 +155,16 @@ class VideoViewerTab(QWidget):
         # center the row
         controlls.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
-        layout.addLayout(controlls)
+        layout.addLayout(controlls, 0)
         self.setLayout(layout)
 
     def next_frame(self) -> None:
+        frame_num = str(self.cap.get(cv2.CAP_PROP_POS_FRAMES))
         ret, self.frame = self.cap.read()
         if ret:
             self.view.container(
                 annotations_container=self.module_tab_bar.process(
-                    annotations_container=AnnotationsContainer(img=self.frame, img_name="frame")
+                    annotations_container=AnnotationsContainer(img=self.frame, img_name=frame_num)
                 )
             )
 
