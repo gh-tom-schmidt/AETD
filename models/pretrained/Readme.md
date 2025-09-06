@@ -1,0 +1,1 @@
+This folder contains the the pretrained models. They can be downloaded at https://arcxyon.com.
