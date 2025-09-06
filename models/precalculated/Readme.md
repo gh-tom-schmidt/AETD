@@ -1,0 +1,1 @@
+This folder containes the precalculated results from the models. 
