@@ -183,3 +183,64 @@ class VideoViewerTab(QWidget):
     def timerEvent(self, event: QTimerEvent) -> None:
         event.accept()
         self.next_frame()
+
+
+class RecorderView(QWidget):
+    def __init__(self, module_tab_bar: "ModuleTabBar", parent: QWidget | None = None) -> None:
+        super().__init__(parent)
+
+        self.view = View(self)
+        self.module_tab_bar: "ModuleTabBar" = module_tab_bar
+
+        # ----------------- LOAD VIDEO ----------------------
+        # load the given global video path
+        if globals.DEFAULT_VIDEO:
+            self.cap = cv2.VideoCapture(globals.DEFAULT_VIDEO)
+            if self.cap.isOpened():
+                self.next_frame()
+            else:
+                raise ValueError("Failed to load video.")
+        else:
+            self.view.setText("No video loaded.")
+
+        # ------------------- LAYOUT ------------------------
+        layout = QVBoxLayout()
+        layout.addWidget(self.view, 1)
+
+        # ---------------- BUTTON LAYOUT --------------------
+        controlls = QHBoxLayout()
+        controlls.setSpacing(10)
+
+        # run button
+        self.run_btn = QPushButton("Run")
+        self.run_btn.clicked.connect(self.run)
+        controlls.addWidget(self.run_btn)
+
+        # center the row
+        controlls.setAlignment(Qt.AlignmentFlag.AlignCenter)
+
+        layout.addLayout(controlls, 0)
+        self.setLayout(layout)
+
+    def next_frame(self) -> None:
+        frame_num = str(self.cap.get(cv2.CAP_PROP_POS_FRAMES))
+        ret, self.frame = self.cap.read()
+        if ret:
+            self.view.container(
+                annotations_container=self.module_tab_bar.process(
+                    annotations_container=AnnotationsContainer(img=self.frame, img_name=frame_num)
+                )
+            )
+
+    def run(self) -> None:
+        if self.run_btn.text() == "Run":
+            self.run_btn.setText("Cancel")
+            self.timer: int = self.startTimer(30)  # 30 ms for ~33 FPS
+        else:
+            self.run_btn.setText("Run")
+            self.killTimer(self.timer)
+            self.cap.set(propId=cv2.CAP_PROP_POS_FRAMES, value=0)
+
+    def timerEvent(self, event: QTimerEvent) -> None:
+        event.accept()
+        self.next_frame()
