@@ -100,18 +100,24 @@ if __name__ == "__main__":
         # to avoid storing the whole image in the results
         res.orig_img = np.empty(1)
         res.path = ""
+        # move to cpu to gpu save memory
+        res = res.cpu()
         cls_results.append((basename, res))
 
         res: Results = detection_model.predict(img=img)
         # to avoid storing the whole image in the results
         res.orig_img = np.empty(1)
         res.path = ""
+        # move to cpu to gpu save memory
+        res = res.cpu()
         det_results.append((basename, res))
 
         res: Results = segmentation_model.predict(img=img)
         # to avoid storing the whole image in the results
         res.orig_img = np.empty(1)
         res.path = ""
+        # move to cpu to gpu save memory
+        res = res.cpu()
         seg_results.append((basename, res))
 
     save_results(cls_results=cls_results, det_results=det_results, seg_results=seg_results, output_folder=output_folder)

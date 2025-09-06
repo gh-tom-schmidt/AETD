@@ -4,10 +4,10 @@ import pickle
 import sys
 
 import cv2
+import numpy as np
 from model import ClassificationModel, DetectionModel, SegmentationModel
 from tqdm import tqdm
 from ultralytics.engine.results import Results  # pyright: ignore[reportMissingTypeStubs]
-import numpy as np
 
 
 def save_results(
@@ -112,18 +112,24 @@ if __name__ == "__main__":
         # to avoid storing the whole image in the results
         res.orig_img = np.empty(1)
         res.path = ""
+        # move to cpu to gpu save memory
+        res = res.cpu()
         cls_results.append((fram_num, res))
 
         res: Results = detection_model.predict(img=frame)
         # to avoid storing the whole image in the results
         res.orig_img = np.empty(1)
         res.path = ""
+        # move to cpu to gpu save memory
+        res = res.cpu()
         det_results.append((fram_num, res))
 
         res: Results = segmentation_model.predict(img=frame)
         # to avoid storing the whole image in the results
         res.orig_img = np.empty(1)
         res.path = ""
+        # move to cpu to gpu save memory
+        res = res.cpu()
         seg_results.append((fram_num, res))
 
     basename: str = os.path.splitext(os.path.basename(video_src))[0]
