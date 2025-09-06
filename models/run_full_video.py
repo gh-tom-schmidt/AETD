@@ -7,6 +7,7 @@ import cv2
 from model import ClassificationModel, DetectionModel, SegmentationModel
 from tqdm import tqdm
 from ultralytics.engine.results import Results  # pyright: ignore[reportMissingTypeStubs]
+import numpy as np
 
 
 def save_results(
@@ -107,9 +108,23 @@ if __name__ == "__main__":
 
         frame = frame[top_crop:, :, :]
 
-        cls_results.append((fram_num, classification_model.predict(img=frame)))
-        det_results.append((fram_num, detection_model.predict(img=frame)))
-        seg_results.append((fram_num, segmentation_model.predict(img=frame)))
+        res: Results = classification_model.predict(img=frame)
+        # to avoid storing the whole image in the results
+        res.orig_img = np.empty(1)
+        res.path = ""
+        cls_results.append((fram_num, res))
+
+        res: Results = detection_model.predict(img=frame)
+        # to avoid storing the whole image in the results
+        res.orig_img = np.empty(1)
+        res.path = ""
+        det_results.append((fram_num, res))
+
+        res: Results = segmentation_model.predict(img=frame)
+        # to avoid storing the whole image in the results
+        res.orig_img = np.empty(1)
+        res.path = ""
+        seg_results.append((fram_num, res))
 
     basename: str = os.path.splitext(os.path.basename(video_src))[0]
     save_results(

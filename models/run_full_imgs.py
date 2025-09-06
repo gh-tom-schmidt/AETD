@@ -3,6 +3,7 @@ import os
 import pickle
 import sys
 
+import numpy as np
 from loaders import ImageLoader
 from model import ClassificationModel, DetectionModel, SegmentationModel
 from ultralytics.engine.results import Results  # pyright: ignore[reportMissingTypeStubs]
@@ -95,9 +96,23 @@ if __name__ == "__main__":
         # for now this only return one result because there is no batching
         img = img[top_crop:, :, :]
 
-        cls_results.append((basename, classification_model.predict(img=img)))
-        det_results.append((basename, detection_model.predict(img=img)))
-        seg_results.append((basename, segmentation_model.predict(img=img)))
+        res: Results = classification_model.predict(img=img)
+        # to avoid storing the whole image in the results
+        res.orig_img = np.empty(1)
+        res.path = ""
+        cls_results.append((basename, res))
+
+        res: Results = detection_model.predict(img=img)
+        # to avoid storing the whole image in the results
+        res.orig_img = np.empty(1)
+        res.path = ""
+        det_results.append((basename, res))
+
+        res: Results = segmentation_model.predict(img=img)
+        # to avoid storing the whole image in the results
+        res.orig_img = np.empty(1)
+        res.path = ""
+        seg_results.append((basename, res))
 
     save_results(cls_results=cls_results, det_results=det_results, seg_results=seg_results, output_folder=output_folder)
     print(f"Files saved to {output_folder}")
