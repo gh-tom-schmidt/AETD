@@ -20,10 +20,10 @@ for url in "${urls[@]}"; do
     unzip -d "$SCRIPT_DIR" "$zipfile"
 
     # move .pt file to models/pretrained/
-    mv "$SCRIPT_DIR/$filename/$filename.pt" "$SCRIPT_DIR/models/pretrained/"
+    mv "$SCRIPT_DIR/$filename/$filename.pt" "$SCRIPT_DIR/pretrained/"
 
     # cleanup
     rm -rf "$zipfile" "$SCRIPT_DIR/$filename"
 done
 
-echo "All models downloaded to $SCRIPT_DIR/models/pretrained/"
+echo "All models downloaded to $SCRIPT_DIR/pretrained/"
