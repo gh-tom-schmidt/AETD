@@ -30,6 +30,7 @@ class PreloadLayout(QWidget):
         # Dictionary to hold default file paths
         self.default_paths: dict[str, str] = {
             "image": globals.DEFAULT_IMG,
+            "video": globals.DEFAULT_VIDEO,
             "seg_model": globals.SEGMENTATION_MODEL_PATH,
             "det_model": globals.DETECTION_MODEL_PATH,
             "cls_model": globals.CLASSIFICATION_MODEL_PATH,
@@ -45,7 +46,8 @@ class PreloadLayout(QWidget):
         self.file_checkboxes: dict[str, QCheckBox] = {}
 
         # Create buttons and labels
-        self.add_file_selector("Select Image", "image", "Images (*.jpg *.jpeg)")
+        self.add_file_selector("Select Image", "image", "Images (*.jpg *.jpeg)", with_checkbox=True)
+        self.add_file_selector("Select Video", "video", "Videos (*.mp4 *.avi)", with_checkbox=True)
         self.add_file_selector("Select Segmentation Model", "seg_model", "PyTorch Models (*.pt)")
         self.add_file_selector("Select Detection Model", "det_model", "PyTorch Models (*.pt)")
         self.add_file_selector("Select Classification Model", "cls_model", "PyTorch Models (*.pt)")
@@ -72,7 +74,7 @@ class PreloadLayout(QWidget):
         label.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred)
         label.setFont(font)
 
-        btn.clicked.connect(lambda k=key, f=file_filter: self.select_file(k, f))
+        btn.clicked.connect(lambda checked=False, k=key, f=file_filter: self.select_file(k, f))
 
         h_layout.addWidget(btn)
 
@@ -97,7 +99,6 @@ class PreloadLayout(QWidget):
         Write selected file paths back into global constants.
         """
 
-        globals.DEFAULT_IMG = self.file_labels["image"].text()
         globals.SEGMENTATION_MODEL_PATH = self.file_labels["seg_model"].text()
         globals.DETECTION_MODEL_PATH = self.file_labels["det_model"].text()
         globals.CLASSIFICATION_MODEL_PATH = self.file_labels["cls_model"].text()
@@ -117,3 +118,13 @@ class PreloadLayout(QWidget):
             globals.CLS_RESULTS = self.file_labels["cls_result"].text()
         else:
             globals.CLS_RESULTS = False
+
+        if self.file_checkboxes["image"].isChecked():
+            globals.DEFAULT_IMG = self.file_labels["image"].text()
+        else:
+            globals.DEFAULT_IMG = False
+
+        if self.file_checkboxes["video"].isChecked():
+            globals.DEFAULT_VIDEO = self.file_labels["video"].text()
+        else:
+            globals.DEFAULT_VIDEO = False

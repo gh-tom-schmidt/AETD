@@ -1,19 +1,19 @@
-from .image_viewer import ImageViewer
 from .info_table import InfoTable
-from .module_tab import ModulTab
-from .tab_bar import ModuleTabBar
-from .tabs import (
+from .module_tabs import (
     DirectionsTab,
-    FullAnnotationTab,
+    # FullAnnotationTab,
+    ModulTab,
     PathTab,
     RoadObjectClassificationTab,
     RoadObjectDetectionTab,
     SegmentorTab,
     SpeedTab,
 )
+from .tab_bars import ModuleTabBar, ViewTabBar
+from .view_tabs import ImageViewerTab, VideoViewerTab, View
 
 __all__: list[str] = [
-    "ImageViewer",
+    "ImageViewerTab",
     "ModuleTabBar",
     "ModulTab",
     "DirectionsTab",
@@ -22,6 +22,9 @@ __all__: list[str] = [
     "RoadObjectDetectionTab",
     "SegmentorTab",
     "PathTab",
-    "FullAnnotationTab",
+    # "FullAnnotationTab",
     "InfoTable",
+    "VideoViewerTab",
+    "ViewTabBar",
+    "View",
 ]
