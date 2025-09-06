@@ -1,6 +1,7 @@
 #!/bin/bash
 
-mkdir -p models
+# get the folder where the script is located
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 urls=(
     "https://arcxyon.com/wp-content/uploads/2025/08/yolo-detect-m_best_epochs-100_size-460-960_05-08-2025.zip"
@@ -10,19 +11,19 @@ urls=(
 
 for url in "${urls[@]}"; do
     filename=$(basename "$url" .zip)
-    zipfile="$filename.zip"
+    zipfile="$SCRIPT_DIR/$filename.zip"
 
-    # Download
-    wget "$url"
+    # download into script directory
+    wget -O "$zipfile" "$url"
 
-    # Unzip
-    unzip "$zipfile"
+    # unzip inside script directory
+    unzip -d "$SCRIPT_DIR" "$zipfile"
 
-    # Move .pt file to models/pretrained/
-    mv "$filename/$filename.pt" "models/pretrained/"
+    # move .pt file to models/pretrained/
+    mv "$SCRIPT_DIR/$filename/$filename.pt" "$SCRIPT_DIR/models/pretrained/"
 
-    # Cleanup
-    rm -rf "$zipfile" "$filename"
+    # cleanup
+    rm -rf "$zipfile" "$SCRIPT_DIR/$filename"
 done
 
-echo "All models downloaded to models/"
+echo "All models downloaded to $SCRIPT_DIR/models/pretrained/"
