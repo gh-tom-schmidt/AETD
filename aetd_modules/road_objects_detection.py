@@ -96,7 +96,7 @@ class RoadObjectDetectionExtractor:
         # where each value must be an integer, because coordinates are expected to be integers
         xyxy: list[tuple[int, int, int, int]] = [
             (int(x1), int(y1), int(x2), int(y2))  # type: ignore
-            for x1, y1, x2, y2 in result.boxes.xyxy.tolist()  # type: ignore
+            for x1, y1, x2, y2 in <result.boxes.xyxy.tolist()  # type: ignore
         ]
         class_ids = result.boxes.cls.int().tolist()  # type: ignore
 
